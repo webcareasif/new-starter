@@ -9,14 +9,13 @@ use Illuminate\Http\Request;
 
 class FrontendController extends Controller
 {
-    public function index()
+    public function home()
     {
-        return view('frontend.promotion.index');
+        return view('frontend.pages.home');
     }
 
-    public function test()
+    public function allProducts()
     {
-        return "sdssadfsdsd";
-        return view('frontend.test');
+        return view('frontend.pages.all-products');
     }
 }

@@ -3,6 +3,5 @@
 use App\Http\Controllers\Frontend\FrontendController;
 
 
-Route::get('/', [FrontendController::class, 'test'])->name('frontend.test');
-Route::get('/1', [FrontendController::class, 'test'])->name('frontend.test');
-Route::get('/test', [FrontendController::class, 'test'])->name('frontend.test');
+Route::get('/', [FrontendController::class, 'home'])->name('frontend.home');
+Route::get('/all-products', [FrontendController::class, 'allProducts'])->name('frontend.all-products');
