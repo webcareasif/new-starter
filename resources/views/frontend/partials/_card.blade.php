@@ -57,23 +57,24 @@
             <span>(320)</span>
         </div>
 
-        <div class="mt-1.5">
+        {{-- <div class="mt-1.5">
             <div class="h-1 rounded-full bg-slate-100 overflow-hidden">
                 <div class="h-full rounded-full bg-gradient-to-r from-[#f59e0b] to-[#e5383b]" style="width:72%"></div>
             </div>
             <p class="text-[9px] text-slate-500 mt-0.5">72% sold · hurry up</p>
-        </div>
+        </div> --}}
 
-        <button data-add class="btn btn-primary btn-sm w-full mt-2 
-            !py-2 !text-[11px]">
-            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                <path d="M3 6h18" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-            Add to Cart
-        </button>
+        <div class="flex gap-2 mt-2 justify-center">
+            <button data-add class="btn btn-primary btn-sm flex-1 !py-2 !text-[11px]">
+                <svg class="w-3 h-3 inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                    <path d="M3 6h18" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                Add to Cart
+            </button>
+        </div>
 
     </div>
 </article>

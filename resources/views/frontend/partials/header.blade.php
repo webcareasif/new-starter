@@ -123,10 +123,11 @@
                             class="text-lg">🕶️</span>Accessories</a>
                 </div>
             </div>
-            <nav class="flex items-center gap-7" aria-label="Main"><a href="index.html"
-                    class="py-3 text-[13px] font-medium text-brand-600">Home</a><a href="shop.html"
-                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Shop</a><a
-                    href="shop.html"
+            <nav class="flex items-center gap-7" aria-label="Main"><a href="{{ route('frontend.home') }}"
+                    class="py-3 text-[13px] font-medium text-brand-600">Home</a><a
+                    href="{{ route('frontend.all-products') }}"
+                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Products</a><a
+                    href=""
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Categories</a><a
                     href="index.html#flash"
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Flash
@@ -135,7 +136,9 @@
                     href="blog.html"
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Blog</a><a
                     href="track-order.html"
-                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Track Order</a></nav>
+                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Track Order</a>
+            </nav>
+
             <a href="tel:01316690209" class="ml-auto text-[12px] flex items-center gap-2 text-slate-600"><span
                     class="text-brand-600"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
