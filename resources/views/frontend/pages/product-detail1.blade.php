@@ -222,15 +222,20 @@
                 </div>
 
                 <button type="button" data-add data-id="{{ $product->id }}" data-name="{{ $productName }}"
-                    data-price="{{ $displaySalePrice }}" data-image="{{ $mainImage }}" data-qty-src="#pQty"
-                    data-variant-source="variantContainer" class="btn btn-primary !py-3 flex-1 sm:flex-none sm:px-8 ...">
-                    Add to Cart
+                    data-price="{{ $displaySalePrice }}" data-qty-src="#pQty"
+                    class="btn btn-primary !py-3 flex-1 sm:flex-none sm:px-8 {{ !$productInStock ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    {{ !$productInStock ? 'disabled' : '' }}>
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                        <path d="M3 6h18" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    {{ $productInStock ? 'Add to Cart' : 'Out of Stock' }}
                 </button>
 
                 @if ($productInStock)
                     <a href="{{ url('/checkout') }}" data-add data-buy data-id="{{ $product->id }}"
-                        data-name="{{ $productName }}" data-price="{{ $displaySalePrice }}"
-                        data-image="{{ $mainImage }}" data-qty-src="#pQty"
+                        data-name="{{ $productName }}" data-price="{{ $displaySalePrice }}" data-qty-src="#pQty"
                         class="btn btn-dark !py-3 flex-1 sm:flex-none sm:px-8">
                         Buy Now
                     </a>
@@ -505,7 +510,6 @@
 
                         <div class="p-3.5 flex flex-col flex-1">
                             <p class="text-[11px] text-slate-400 mb-1">{{ $relatedCategory }}</p>
-
                             <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]">
                                 <a href="{{ route('frontend.product-details', $related->slug) }}"
                                     class="hover:text-brand-600">
@@ -535,11 +539,13 @@
                                 <b class="text-slate-700">{{ number_format($relatedRating, 1) }}</b>
                                 ({{ $relatedReviewCount }})
                             </div>
+                            >
 
-                            {{-- Related product Add to Cart — uses $related values --}}
-                            <button type="button" data-add data-id="{{ $related->id }}"
-                                data-name="{{ $related->name }}" data-price="{{ $relatedPrice }}"
-                                data-image="{{ $relatedImage }}" class="btn btn-primary btn-sm w-full mt-3">
+                            <button type="button" data-add data-id="{{ $product->id }}"
+                                data-name="{{ $productName }}" data-price="{{ $salePrice }}"
+                                data-image="{{ $productImage }}"
+                                class="btn btn-primary btn-sm w-full mt-3 {{ !$productInStock ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                {{ !$productInStock ? 'disabled' : '' }}>
                                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                                     aria-hidden="true">
@@ -547,7 +553,7 @@
                                     <path d="M3 6h18" />
                                     <path d="M16 10a4 4 0 0 1-8 0" />
                                 </svg>
-                                Add to Cart
+                                {{ $productInStock ? 'Add to Cart' : 'Out of Stock' }}
                             </button>
                         </div>
                     </article>

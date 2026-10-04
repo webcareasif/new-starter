@@ -56,7 +56,7 @@ class FrontendController extends Controller
             $product->in_stock = $product->stock > 0;
         }
 
-        return view('frontend.pages.all-products', compact('products'));
+        return view('frontend.pages.all-products', compact('products')); // productImage
     }
 
     public function productDetail($slug)

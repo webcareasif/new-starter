@@ -125,6 +125,9 @@
                     '</svg>'
                 );
 
+            /* --------------------------------------------------------
+               Helpers
+               -------------------------------------------------------- */
             function getCart() {
                 try {
                     return JSON.parse(localStorage.getItem(CART_KEY)) || [];
@@ -138,6 +141,51 @@
                 updateCartUI();
             }
 
+            /**
+             * Get the currently selected variant from a container.
+             * Returns: { id: string|null, label: string|null }
+             */
+            function getSelectedVariant(sourceSelector) {
+                if (!sourceSelector) return {
+                    id: null,
+                    label: null
+                };
+
+                const container = document.querySelector(sourceSelector);
+                if (!container) return {
+                    id: null,
+                    label: null
+                };
+
+                const active = container.querySelector('.variant-btn.active-variant, [data-variant].active-variant');
+                if (!active) return {
+                    id: null,
+                    label: null
+                };
+
+                const id = active.dataset.variantId || null;
+
+                // Extract label: text content without the price span
+                let label = '';
+                const priceSpan = active.querySelector('span');
+                if (priceSpan) {
+                    // Clone the button, remove span, take text
+                    const clone = active.cloneNode(true);
+                    clone.querySelectorAll('span').forEach(s => s.remove());
+                    label = clone.textContent.trim();
+                } else {
+                    label = active.textContent.trim();
+                }
+
+                return {
+                    id: id,
+                    label: label
+                };
+            }
+
+            /* --------------------------------------------------------
+               Cart UI
+               -------------------------------------------------------- */
             function updateCartUI() {
                 const cart = getCart();
 
@@ -163,6 +211,7 @@
                     const qty = parseInt(item.qty || 1);
                     const price = parseFloat(item.price || 0);
                     const image = item.image || FALLBACK_IMAGE;
+                    const variantLabel = item.variantLabel || '';
 
                     totalItems += qty;
                     subtotal += qty * price;
@@ -170,14 +219,14 @@
                     html +=
                         '<li class="flex gap-3 py-4 border-b border-slate-100 last:border-0">' +
 
-                        /* ---- Product Image ---- */
+                        /* Image */
                         '<div class="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 shrink-0">' +
                         '<img src="' + image + '" alt="' + (item.name || 'Product') +
                         '" class="w-full h-full object-cover" ' +
                         'onerror="this.onerror=null;this.src=\'' + FALLBACK_IMAGE + '\';">' +
                         '</div>' +
 
-                        /* ---- Product Details ---- */
+                        /* Details */
                         '<div class="flex-1 min-w-0">' +
 
                         /* Name */
@@ -185,15 +234,21 @@
                         (item.name || 'Product') +
                         '</p>' +
 
+                        /* Variant label */
+                        (variantLabel ?
+                            '<p class="text-[11px] text-slate-500 mt-0.5">' +
+                            variantLabel +
+                            '</p>' :
+                            '') +
+
                         /* Unit price */
                         '<p class="text-[12px] text-slate-500 mt-0.5">৳' +
                         price.toLocaleString('en-US') + ' × ' + qty +
                         '</p>' +
 
-                        /* Qty controls + line total + remove */
+                        /* Qty controls + line total */
                         '<div class="flex items-center justify-between mt-2">' +
 
-                        /* Qty stepper */
                         '<div class="flex items-center border border-slate-200 rounded-md overflow-hidden">' +
                         '<button type="button" data-qty-dec="' + index + '" ' +
                         'class="w-7 h-7 grid place-items-center text-slate-600 hover:bg-slate-50" ' +
@@ -215,7 +270,6 @@
                         '</button>' +
                         '</div>' +
 
-                        /* Line total */
                         '<span class="text-[13px] font-semibold text-brand-700">৳' +
                         (price * qty).toLocaleString('en-US') +
                         '</span>' +
@@ -236,11 +290,7 @@
                 if (countEl) countEl.textContent = totalItems;
                 if (subEl) subEl.textContent = '৳' + subtotal.toLocaleString('en-US');
 
-                /* --------------------------------------------------------
-                   Bind per-item action buttons
-                   -------------------------------------------------------- */
-
-                /* Remove item */
+                /* Remove */
                 list.querySelectorAll('[data-remove]').forEach(function(btn) {
                     btn.addEventListener('click', function() {
                         const idx = parseInt(this.dataset.remove);
@@ -250,7 +300,7 @@
                     });
                 });
 
-                /* Increase quantity */
+                /* Increase */
                 list.querySelectorAll('[data-qty-inc]').forEach(function(btn) {
                     btn.addEventListener('click', function() {
                         const idx = parseInt(this.dataset.qtyInc);
@@ -262,7 +312,7 @@
                     });
                 });
 
-                /* Decrease quantity (min 1; if 1 → remove) */
+                /* Decrease */
                 list.querySelectorAll('[data-qty-dec]').forEach(function(btn) {
                     btn.addEventListener('click', function() {
                         const idx = parseInt(this.dataset.qtyDec);
@@ -270,21 +320,18 @@
                         if (!cart[idx]) return;
 
                         const currentQty = parseInt(cart[idx].qty || 1);
-
                         if (currentQty <= 1) {
-                            /* At 1 — remove the item instead of going to 0 */
                             cart.splice(idx, 1);
                         } else {
                             cart[idx].qty = currentQty - 1;
                         }
-
                         saveCart(cart);
                     });
                 });
             }
 
             /* --------------------------------------------------------
-               Global "add to cart" handler
+               Global Add-to-Cart handler
                -------------------------------------------------------- */
             document.addEventListener('click', function(e) {
                 const addBtn = e.target.closest('[data-add]');
@@ -292,10 +339,20 @@
 
                 e.preventDefault();
 
-                const id = addBtn.dataset.id;
+                const id = String(addBtn.dataset.id);
                 const name = addBtn.dataset.name || 'Product';
                 const price = parseFloat(addBtn.dataset.price || 0);
                 const image = addBtn.dataset.image || '';
+
+                /* Read currently selected variant (if any) */
+                const variantSource = addBtn.dataset.variantSource || null;
+                const variant = getSelectedVariant(
+                    variantSource ? '#' + variantSource : null
+                );
+
+                /* Build a UNIQUE key so the same product with different
+                   variants is treated as separate cart lines. */
+                const cartKey = variant.id ? id + '::' + variant.id : id;
 
                 let qty = 1;
                 if (addBtn.dataset.qtySrc) {
@@ -305,7 +362,7 @@
 
                 const cart = getCart();
                 const existing = cart.find(function(item) {
-                    return String(item.id) === String(id);
+                    return item.cartKey === cartKey;
                 });
 
                 if (existing) {
@@ -313,7 +370,10 @@
                     if (!existing.image && image) existing.image = image;
                 } else {
                     cart.push({
+                        cartKey: cartKey,
                         id: id,
+                        variantId: variant.id || null,
+                        variantLabel: variant.label || null,
                         name: name,
                         price: price,
                         qty: qty,
