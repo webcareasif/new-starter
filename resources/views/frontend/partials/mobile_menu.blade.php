@@ -16,10 +16,12 @@
                 <path d="M18 6 6 18" />
                 <path d="m6 6 12 12" />
             </svg></button></div>
-    <a href="index.html" class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Home</a><a
-        href="shop.html" class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Shop</a><a
-        href="shop.html" class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Categories</a><a
-        href="index.html#flash" class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Flash
+    <a href="{{ route('frontend.home') }}"
+        class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Home</a><a
+        href="{{ route('frontend.all-products') }}"
+        class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Products</a><a href="shop.html"
+        class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Categories</a><a href="index.html#flash"
+        class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Flash
         Sale</a><a href="shop.html" class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Offers</a><a
         href="blog.html" class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Blog</a><a
         href="track-order.html" class="block px-5 py-3 border-b border-slate-100 text-sm font-medium">Track Order</a>

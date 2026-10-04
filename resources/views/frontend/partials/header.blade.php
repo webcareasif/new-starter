@@ -6,9 +6,10 @@
                 <line x1="4" x2="20" y1="12" y2="12" />
                 <line x1="4" x2="20" y1="6" y2="6" />
                 <line x1="4" x2="20" y1="18" y2="18" />
-            </svg></button>
-        <a href="index.html" class="flex items-center gap-2 sm:gap-2.5 shrink-0" aria-label="NexioMart home"><svg
-                class="w-8 h-8 sm:w-9 sm:h-9" viewBox="0 0 40 40" aria-hidden="true">
+            </svg>
+        </button>
+        <a href="{{ route('frontend.home') }}" class="flex items-center gap-2 sm:gap-2.5 shrink-0"
+            aria-label="NexioMart home"><svg class="w-8 h-8 sm:w-9 sm:h-9" viewBox="0 0 40 40" aria-hidden="true">
                 <rect width="40" height="40" rx="10" fill="#0e7d3b" />
                 <path d="M11 29c0-9 5-15 17-16-1 11-6 17-14 17-1 0-2-.3-3-1Z" fill="#fff" />
                 <path d="M12 30c4-6 8-9 13-12" stroke="#0e7d3b" stroke-width="1.6" stroke-linecap="round"
@@ -113,7 +114,7 @@
                 </a>
                 <a href="shop.html"
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Categories</a>
-                <a href="index.html#flash"
+                <a href="{{ route('frontend.home') }}#flash"
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Flash Sale</a>
                 <a href="shop.html"
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Offers</a>

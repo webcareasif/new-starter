@@ -108,6 +108,233 @@
         </div>
     </aside>
     <script src="{{ asset('frontend/assets/js/main.js') }}"></script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const CART_KEY = 'nexio_cart';
+
+            const FALLBACK_IMAGE =
+                'data:image/svg+xml;utf8,' +
+                encodeURIComponent(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>' +
+                    '<circle cx="8.5" cy="8.5" r="1.5"></circle>' +
+                    '<polyline points="21 15 16 10 5 21"></polyline>' +
+                    '</svg>'
+                );
+
+            function getCart() {
+                try {
+                    return JSON.parse(localStorage.getItem(CART_KEY)) || [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function saveCart(cart) {
+                localStorage.setItem(CART_KEY, JSON.stringify(cart));
+                updateCartUI();
+            }
+
+            function updateCartUI() {
+                const cart = getCart();
+
+                const list = document.getElementById('drawerItems');
+                const countEl = document.querySelector('[data-cart-count]');
+                const subEl = document.querySelector('[data-subtotal]');
+
+                if (!list) return;
+
+                if (cart.length === 0) {
+                    list.innerHTML =
+                        '<li class="py-10 text-center text-sm text-slate-400">Your cart is empty</li>';
+                    if (countEl) countEl.textContent = '0';
+                    if (subEl) subEl.textContent = '৳0';
+                    return;
+                }
+
+                let totalItems = 0;
+                let subtotal = 0;
+                let html = '';
+
+                cart.forEach(function(item, index) {
+                    const qty = parseInt(item.qty || 1);
+                    const price = parseFloat(item.price || 0);
+                    const image = item.image || FALLBACK_IMAGE;
+
+                    totalItems += qty;
+                    subtotal += qty * price;
+
+                    html +=
+                        '<li class="flex gap-3 py-4 border-b border-slate-100 last:border-0">' +
+
+                        /* ---- Product Image ---- */
+                        '<div class="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 shrink-0">' +
+                        '<img src="' + image + '" alt="' + (item.name || 'Product') +
+                        '" class="w-full h-full object-cover" ' +
+                        'onerror="this.onerror=null;this.src=\'' + FALLBACK_IMAGE + '\';">' +
+                        '</div>' +
+
+                        /* ---- Product Details ---- */
+                        '<div class="flex-1 min-w-0">' +
+
+                        /* Name */
+                        '<p class="text-[13px] font-medium text-slate-800 truncate">' +
+                        (item.name || 'Product') +
+                        '</p>' +
+
+                        /* Unit price */
+                        '<p class="text-[12px] text-slate-500 mt-0.5">৳' +
+                        price.toLocaleString('en-US') + ' × ' + qty +
+                        '</p>' +
+
+                        /* Qty controls + line total + remove */
+                        '<div class="flex items-center justify-between mt-2">' +
+
+                        /* Qty stepper */
+                        '<div class="flex items-center border border-slate-200 rounded-md overflow-hidden">' +
+                        '<button type="button" data-qty-dec="' + index + '" ' +
+                        'class="w-7 h-7 grid place-items-center text-slate-600 hover:bg-slate-50" ' +
+                        'aria-label="Decrease quantity">' +
+                        '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">' +
+                        '<path d="M5 12h14" />' +
+                        '</svg>' +
+                        '</button>' +
+                        '<span class="w-8 text-center text-[12px] font-semibold text-slate-800 select-none">' +
+                        qty +
+                        '</span>' +
+                        '<button type="button" data-qty-inc="' + index + '" ' +
+                        'class="w-7 h-7 grid place-items-center text-slate-600 hover:bg-slate-50" ' +
+                        'aria-label="Increase quantity">' +
+                        '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">' +
+                        '<path d="M5 12h14" />' +
+                        '<path d="M12 5v14" />' +
+                        '</svg>' +
+                        '</button>' +
+                        '</div>' +
+
+                        /* Line total */
+                        '<span class="text-[13px] font-semibold text-brand-700">৳' +
+                        (price * qty).toLocaleString('en-US') +
+                        '</span>' +
+
+                        '</div>' +
+
+                        /* Remove */
+                        '<button type="button" data-remove="' + index + '" ' +
+                        'class="text-[11px] text-red-500 hover:underline mt-1.5">Remove</button>' +
+
+                        '</div>' +
+
+                        '</li>';
+                });
+
+                list.innerHTML = html;
+
+                if (countEl) countEl.textContent = totalItems;
+                if (subEl) subEl.textContent = '৳' + subtotal.toLocaleString('en-US');
+
+                /* --------------------------------------------------------
+                   Bind per-item action buttons
+                   -------------------------------------------------------- */
+
+                /* Remove item */
+                list.querySelectorAll('[data-remove]').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.remove);
+                        const cart = getCart();
+                        cart.splice(idx, 1);
+                        saveCart(cart);
+                    });
+                });
+
+                /* Increase quantity */
+                list.querySelectorAll('[data-qty-inc]').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.qtyInc);
+                        const cart = getCart();
+                        if (cart[idx]) {
+                            cart[idx].qty = parseInt(cart[idx].qty || 1) + 1;
+                            saveCart(cart);
+                        }
+                    });
+                });
+
+                /* Decrease quantity (min 1; if 1 → remove) */
+                list.querySelectorAll('[data-qty-dec]').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const idx = parseInt(this.dataset.qtyDec);
+                        const cart = getCart();
+                        if (!cart[idx]) return;
+
+                        const currentQty = parseInt(cart[idx].qty || 1);
+
+                        if (currentQty <= 1) {
+                            /* At 1 — remove the item instead of going to 0 */
+                            cart.splice(idx, 1);
+                        } else {
+                            cart[idx].qty = currentQty - 1;
+                        }
+
+                        saveCart(cart);
+                    });
+                });
+            }
+
+            /* --------------------------------------------------------
+               Global "add to cart" handler
+               -------------------------------------------------------- */
+            document.addEventListener('click', function(e) {
+                const addBtn = e.target.closest('[data-add]');
+                if (!addBtn) return;
+
+                e.preventDefault();
+
+                const id = addBtn.dataset.id;
+                const name = addBtn.dataset.name || 'Product';
+                const price = parseFloat(addBtn.dataset.price || 0);
+                const image = addBtn.dataset.image || '';
+
+                let qty = 1;
+                if (addBtn.dataset.qtySrc) {
+                    const qtyInput = document.querySelector(addBtn.dataset.qtySrc);
+                    if (qtyInput) qty = parseInt(qtyInput.value || 1);
+                }
+
+                const cart = getCart();
+                const existing = cart.find(function(item) {
+                    return String(item.id) === String(id);
+                });
+
+                if (existing) {
+                    existing.qty = parseInt(existing.qty || 1) + qty;
+                    if (!existing.image && image) existing.image = image;
+                } else {
+                    cart.push({
+                        id: id,
+                        name: name,
+                        price: price,
+                        qty: qty,
+                        image: image
+                    });
+                }
+
+                saveCart(cart);
+            });
+
+            document.addEventListener('DOMContentLoaded', updateCartUI);
+
+            window.NexioCart = {
+                getCart: getCart,
+                saveCart: saveCart,
+                updateUI: updateCartUI
+            };
+        })();
+    </script>
+
+    @stack('scripts')
 </body>
 
 </html>
