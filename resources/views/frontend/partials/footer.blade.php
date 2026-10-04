@@ -1,14 +1,14 @@
 <footer class="bg-brand-50/60 border-t border-brand-100 mt-16">
     <div
-        class="max-w-7xl mx-auto px-4 py-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr_1fr] text-sm text-slate-600">
-        <div><a href="index.html" class="flex items-center gap-2.5" aria-label="NexioMart home"><svg class="w-9 h-9"
-                    viewBox="0 0 40 40" aria-hidden="true">
+        class="container-fluid py-12 grid grid-cols-2 gap-x-6 gap-y-9 lg:gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr_1fr] text-sm text-slate-600">
+        <div class="col-span-2 lg:col-span-1"><a href="index.html" class="flex items-center gap-2 sm:gap-2.5 shrink-0"
+                aria-label="NexioMart home"><svg class="w-8 h-8 sm:w-9 sm:h-9" viewBox="0 0 40 40" aria-hidden="true">
                     <rect width="40" height="40" rx="10" fill="#0e7d3b" />
                     <path d="M11 29c0-9 5-15 17-16-1 11-6 17-14 17-1 0-2-.3-3-1Z" fill="#fff" />
                     <path d="M12 30c4-6 8-9 13-12" stroke="#0e7d3b" stroke-width="1.6" stroke-linecap="round"
                         fill="none" />
                 </svg><span class="leading-none"><span
-                        class="block text-[1.3rem] font-bold text-brand-900">NexioMart</span><span
+                        class="block text-[1.15rem] sm:text-[1.3rem] font-bold text-brand-900">NexioMart</span><span
                         class="block text-[10px] text-slate-500 mt-1">Shop Smart, Live Better</span></span></a>
             <p class="mt-4 max-w-[260px] leading-relaxed text-[13px]">Your trusted online shopping destination in
                 Bangladesh. Quality products, best price and excellent service.</p>
@@ -59,7 +59,7 @@
                 <li><a href="contact.html" class="hover:text-brand-600">Contact Us</a></li>
             </ul>
         </div>
-        <div>
+        <div class="col-span-2 sm:col-span-1">
             <h4 class="font-semibold text-slate-900 mb-4">Contact Us</h4>
             <ul class="space-y-3 text-[13px]">
                 <li class="flex gap-3"><span class="text-brand-600"><svg class="w-4 h-4" viewBox="0 0 24 24"
@@ -82,7 +82,7 @@
                         </svg></span>House 12, Road 5, Uttara,<br>Dhaka, Bangladesh</li>
             </ul>
         </div>
-        <div>
+        <div class="col-span-2 sm:col-span-1">
             <h4 class="font-semibold text-slate-900 mb-4">Payment Methods</h4>
             <div class="flex flex-wrap gap-2"><span
                     class="px-3 py-1.5 rounded-md bg-white border border-slate-200 text-[12px] font-bold text-blue-800 italic">VISA</span><span
@@ -94,8 +94,7 @@
         </div>
     </div>
     <div class="border-t border-brand-100">
-        <div
-            class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between gap-2 text-xs text-slate-500">
+        <div class="container-fluid py-4 flex flex-col sm:flex-row justify-between gap-2 text-xs text-slate-500">
             <p>© <span data-year>2026</span> NexioMart. All Rights Reserved.</p>
             <p>Better Products, Brighter Living</p>
         </div>
