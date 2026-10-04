@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Admin\Category;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,14 @@ class AppServiceProvider extends ServiceProvider
     if (env('APP_ENV') === 'production') {
       URL::forceScheme('https');
     }
+
+    View::share(
+      'categories',
+      Category::orderBy('position')
+        ->orderByDesc('id')
+        ->get()
+    );
+
     Schema::defaultStringLength(191);
     Paginator::useBootstrap();
   }

@@ -83,23 +83,14 @@
                     </svg></button>
                 <div
                     class="dd absolute left-0 top-full w-60 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50">
-                    <a href="shop.html"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                            class="text-lg">👕</span>Fashion</a><a href="shop.html"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                            class="text-lg">🎧</span>Electronics</a><a href="shop.html"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                            class="text-lg">🛋️</span>Home & Living</a><a href="shop.html"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                            class="text-lg">🧴</span>Beauty & Care</a><a href="shop.html"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                            class="text-lg">🧸</span>Kids Zone</a><a href="shop.html"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                            class="text-lg">🏋️</span>Sports & Fitness</a><a href="shop.html"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                            class="text-lg">🧺</span>Groceries</a><a href="shop.html"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                            class="text-lg">🕶️</span>Accessories</a>
+                    @foreach ($categories as $category)
+                        <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                            class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
+                                class="text-lg">
+                                <img src="{{ uploaded_asset($category->category_image) }}" alt="Icon"
+                                    class="w-5 h-5 object-cover rounded-full">
+                            </span>{{ $category->category_name }}</a>
+                    @endforeach
                 </div>
             </div>
             <nav class="flex items-center gap-7" aria-label="Main">

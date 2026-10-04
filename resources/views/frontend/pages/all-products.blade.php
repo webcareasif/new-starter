@@ -4,14 +4,14 @@
 
     <section class="hero-bg border-b border-brand-100">
         <div class="container-fluid py-9 md:py-12">
-            <h1 class="text-2xl md:text-3xl font-bold text-brand-900">Shop All Products</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-brand-900">All Products</h1>
             <p class="text-sm text-slate-600 mt-1.5 max-w-xl">Browse our full collection and find something you will love.
             </p>
             <div class="mt-3">
                 <nav class="text-sm text-slate-500 flex items-center gap-1.5 flex-wrap" aria-label="Breadcrumb">
                     <a href="{{ route('frontend.home') }}" class="hover:text-brand-600">Home</a>
                     <span class="text-slate-300">/</span>
-                    <span class="text-slate-800 font-medium">Shop</span>
+                    <span class="text-slate-800 font-medium">Products</span>
                 </nav>
             </div>
         </div>

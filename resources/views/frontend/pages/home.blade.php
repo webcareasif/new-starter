@@ -14,814 +14,322 @@
                     </svg> All Categories
                 </div>
                 <ul class="flex-1 flex flex-col justify-evenly py-1">
-                    <li><a href="shop.html"
-                            class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
-                            <span class="w-7 text-xl leading-none text-center">👕</span><span
-                                class="flex-1">Fashion</span><span class="text-slate-300"><svg class="w-4 h-4"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg></span></a>
-                        <div class="cat-fly absolute left-full top-0 bottom-0 w-[min(620px,50vw)] card !rounded-2xl p-7 z-30 overflow-hidden"
-                            style="background:linear-gradient(135deg,#fff 55%,#e3f1e5)">
-                            <div class="flex items-center gap-3 mb-5"><span class="text-3xl">👕</span>
-                                <h3 class="text-lg font-bold text-slate-900">Fashion</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6">
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Women</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Sarees</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Hijab &
-                                                Scarves</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Kurtis &
-                                                Tops</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Three
-                                                Piece</a>
-                                        </li>
-                                    </ul>
+                    @foreach ($categories as $category)
+                        @php
+                            $hasSubcategories = ($category->subcategories ?? collect())->count() > 0;
+                            $hasProducts = ($category->products_count ?? 0) > 0;
+                            $hasMegaContent = $hasSubcategories || $hasProducts;
+                        @endphp
+
+                        <li class="relative group">
+
+                            {{-- Main Category --}}
+                            <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
+
+                                {{-- Category Icon --}}
+                                <span class="w-7 h-7 flex items-center justify-center text-center shrink-0">
+                                    @if ($category->category_image)
+                                        <img src="{{ uploaded_asset($category->category_image) }}"
+                                            alt="{{ $category->category_name }}" class="w-7 h-7 object-cover rounded-md">
+                                    @else
+                                        <span class="text-xl">🛍️</span>
+                                    @endif
+                                </span>
+
+                                {{-- Category Name --}}
+                                <span class="flex-1">
+                                    {{ $category->category_name }}
+                                </span>
+
+                                {{-- Product Count --}}
+                                @if (($category->products_count ?? 0) > 0)
+                                    <span class="text-[11px] text-slate-400 mr-1">
+                                        {{ $category->products_count }}
+                                    </span>
+                                @endif
+
+                                {{-- Arrow — only if there's a mega menu --}}
+                                @if ($hasMegaContent)
+                                    <span class="text-slate-300">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                            aria-hidden="true">
+                                            <path d="m9 18 6-6-6-6" />
+                                        </svg>
+                                    </span>
+                                @endif
+                            </a>
+
+                            {{-- Mega Menu — only if there's content --}}
+                            @if ($hasMegaContent)
+                                <div class="cat-fly absolute left-full top-0 bottom-0
+                       w-[min(620px,50vw)]
+                       card !rounded-2xl p-7 z-30 overflow-hidden"
+                                    style="background:linear-gradient(135deg,#fff 55%,#e3f1e5)">
+
+                                    {{-- Header --}}
+                                    <div class="flex items-center gap-3 mb-5">
+                                        <span
+                                            class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center overflow-hidden">
+                                            @if ($category->category_image)
+                                                <img src="{{ uploaded_asset($category->category_image) }}"
+                                                    alt="{{ $category->category_name }}" class="w-full h-full object-cover">
+                                            @else
+                                                <span class="text-2xl">🛍️</span>
+                                            @endif
+                                        </span>
+
+                                        <div>
+                                            <h3 class="text-lg font-bold text-slate-900">
+                                                {{ $category->category_name }}
+                                            </h3>
+                                            <p class="text-xs text-slate-400">
+                                                {{ $category->products_count ?? 0 }} Products
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-6">
+                                        <div>
+                                            <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">
+                                                {{ $hasSubcategories ? 'Subcategories' : $category->category_name }}
+                                            </h4>
+
+                                            <ul class="space-y-1.5">
+                                                @if ($hasSubcategories)
+                                                    @foreach ($category->subcategories->take(5) as $sub)
+                                                        <li>
+                                                            <a href="{{ route('frontend.all-products', ['category' => $category->slug, 'subcategory' => $sub->slug ?? '']) }}"
+                                                                class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                                {{ $sub->subcategory_name ?? ($sub->name ?? 'Subcategory') }}
+                                                            </a>
+                                                        </li>
+                                                    @endforeach
+                                                @else
+                                                    <li>
+                                                        <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                            class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                            All Products
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                            class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                            New Arrivals
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                            class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                            Best Selling
+                                                        </a>
+                                                    </li>
+                                                @endif
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">
+                                                Explore
+                                            </h4>
+                                            <ul class="space-y-1.5">
+                                                <li>
+                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                        Featured
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                        Trending
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                        Offers
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">
+                                                Quick Links
+                                            </h4>
+                                            <ul class="space-y-1.5">
+                                                <li>
+                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                        Shop Now
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                        Popular Products
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
+                                                        View More
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                        class="btn btn-primary btn-sm absolute left-7 bottom-6">
+                                        Shop {{ $category->category_name }}
+                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                            aria-hidden="true">
+                                            <path d="M5 12h14" />
+                                            <path d="m12 5 7 7-7 7" />
+                                        </svg>
+                                    </a>
+                                    <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-10 select-none"
+                                        aria-hidden="true">
+                                        🛍️
+                                    </span>
                                 </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Men</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Panjabi</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Shirts &
-                                                T-Shirts</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Jackets</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Trousers</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Footwear & Bags
-                                    </h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Sneakers</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Formal
-                                                Shoes</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Laptop
-                                                Bags</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Wallets</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <a href="shop.html" class="btn btn-primary btn-sm absolute left-7 bottom-6">Shop all
-                                Fashion <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M5 12h14" />
-                                    <path d="m12 5 7 7-7 7" />
-                                </svg></a>
-                            <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-90 select-none"
-                                aria-hidden="true">👕</span>
-                        </div>
-                    </li>
-                    <li><a href="shop.html"
-                            class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
-                            <span class="w-7 text-xl leading-none text-center">🎧</span><span
-                                class="flex-1">Electronics</span><span class="text-slate-300"><svg class="w-4 h-4"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg></span></a>
-                        <div class="cat-fly absolute left-full top-0 bottom-0 w-[min(620px,50vw)] card !rounded-2xl p-7 z-30 overflow-hidden"
-                            style="background:linear-gradient(135deg,#fff 55%,#e6eef9)">
-                            <div class="flex items-center gap-3 mb-5"><span class="text-3xl">🎧</span>
-                                <h3 class="text-lg font-bold text-slate-900">Electronics</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6">
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Wearables & Audio
-                                    </h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Smart
-                                                Watches</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Earbuds</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Headphones</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Speakers</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Computer</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Keyboards</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Mouse</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Power
-                                                Banks</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Chargers &
-                                                Cables</a></li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Cameras & TVs</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Action
-                                                Cameras</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Smart
-                                                TVs</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Security
-                                                Cameras</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <a href="shop.html" class="btn btn-primary btn-sm absolute left-7 bottom-6">Shop all
-                                Electronics <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M5 12h14" />
-                                    <path d="m12 5 7 7-7 7" />
-                                </svg></a>
-                            <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-90 select-none"
-                                aria-hidden="true">🎧</span>
-                        </div>
-                    </li>
-                    <li><a href="shop.html"
-                            class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
-                            <span class="w-7 text-xl leading-none text-center">🛋️</span><span class="flex-1">Home
-                                &
-                                Living</span><span class="text-slate-300"><svg class="w-4 h-4" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg></span></a>
-                        <div class="cat-fly absolute left-full top-0 bottom-0 w-[min(620px,50vw)] card !rounded-2xl p-7 z-30 overflow-hidden"
-                            style="background:linear-gradient(135deg,#fff 55%,#f6efe4)">
-                            <div class="flex items-center gap-3 mb-5"><span class="text-3xl">🛋️</span>
-                                <h3 class="text-lg font-bold text-slate-900">Home & Living</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6">
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Kitchen</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Air
-                                                Fryers</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Blenders</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Cookware</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Dinner
-                                                Sets</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Furniture & Decor
-                                    </h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Sofas</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Wall
-                                                Clocks</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Lamps</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Plants &
-                                                Pots</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Bedding</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Pillows</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Bed
-                                                Sheets</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Blankets</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <a href="shop.html" class="btn btn-primary btn-sm absolute left-7 bottom-6">Shop all
-                                Home & Living <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M5 12h14" />
-                                    <path d="m12 5 7 7-7 7" />
-                                </svg></a>
-                            <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-90 select-none"
-                                aria-hidden="true">🛋️</span>
-                        </div>
-                    </li>
-                    <li><a href="shop.html"
-                            class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
-                            <span class="w-7 text-xl leading-none text-center">🧴</span><span class="flex-1">Beauty &
-                                Care</span><span class="text-slate-300"><svg class="w-4 h-4" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg></span></a>
-                        <div class="cat-fly absolute left-full top-0 bottom-0 w-[min(620px,50vw)] card !rounded-2xl p-7 z-30 overflow-hidden"
-                            style="background:linear-gradient(135deg,#fff 55%,#fbe9ee)">
-                            <div class="flex items-center gap-3 mb-5"><span class="text-3xl">🧴</span>
-                                <h3 class="text-lg font-bold text-slate-900">Beauty & Care</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6">
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Skincare</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Face
-                                                Wash</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Moisturizers</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Sunscreen</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Fragrance</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Perfumes</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Body
-                                                Mist</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Attar</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Hair & Body</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Shampoo</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Hair
-                                                Oil</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Body
-                                                Lotion</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <a href="shop.html" class="btn btn-primary btn-sm absolute left-7 bottom-6">Shop all
-                                Beauty & Care <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M5 12h14" />
-                                    <path d="m12 5 7 7-7 7" />
-                                </svg></a>
-                            <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-90 select-none"
-                                aria-hidden="true">🧴</span>
-                        </div>
-                    </li>
-                    <li><a href="shop.html"
-                            class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
-                            <span class="w-7 text-xl leading-none text-center">🧸</span><span class="flex-1">Kids
-                                Zone</span><span class="text-slate-300"><svg class="w-4 h-4" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg></span></a>
-                        <div class="cat-fly absolute left-full top-0 bottom-0 w-[min(620px,50vw)] card !rounded-2xl p-7 z-30 overflow-hidden"
-                            style="background:linear-gradient(135deg,#fff 55%,#fdeee3)">
-                            <div class="flex items-center gap-3 mb-5"><span class="text-3xl">🧸</span>
-                                <h3 class="text-lg font-bold text-slate-900">Kids Zone</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6">
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Clothing</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Baby
-                                                Frocks</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Boys
-                                                Wear</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Sleepwear</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Toys</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Soft
-                                                Toys</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Learning
-                                                Toys</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Cars &
-                                                Trucks</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Baby Care</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Diapers</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Feeding</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Strollers</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <a href="shop.html" class="btn btn-primary btn-sm absolute left-7 bottom-6">Shop all
-                                Kids Zone <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M5 12h14" />
-                                    <path d="m12 5 7 7-7 7" />
-                                </svg></a>
-                            <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-90 select-none"
-                                aria-hidden="true">🧸</span>
-                        </div>
-                    </li>
-                    <li><a href="shop.html"
-                            class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
-                            <span class="w-7 text-xl leading-none text-center">🏋️</span><span class="flex-1">Sports &
-                                Fitness</span><span class="text-slate-300"><svg class="w-4 h-4" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg></span></a>
-                        <div class="cat-fly absolute left-full top-0 bottom-0 w-[min(620px,50vw)] card !rounded-2xl p-7 z-30 overflow-hidden"
-                            style="background:linear-gradient(135deg,#fff 55%,#eceff1)">
-                            <div class="flex items-center gap-3 mb-5"><span class="text-3xl">🏋️</span>
-                                <h3 class="text-lg font-bold text-slate-900">Sports & Fitness</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6">
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Gear</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Dumbbells</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Yoga
-                                                Mats</a></li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Skipping
-                                                Ropes</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Footwear</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Running
-                                                Shoes</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Training
-                                                Shoes</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Apparel</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Track
-                                                Pants</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Sports
-                                                T-Shirts</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <a href="shop.html" class="btn btn-primary btn-sm absolute left-7 bottom-6">Shop all
-                                Sports & Fitness
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                    aria-hidden="true">
-                                    <path d="M5 12h14" />
-                                    <path d="m12 5 7 7-7 7" />
-                                </svg></a>
-                            <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-90 select-none"
-                                aria-hidden="true">🏋️</span>
-                        </div>
-                    </li>
-                    <li><a href="shop.html"
-                            class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
-                            <span class="w-7 text-xl leading-none text-center">🧺</span><span
-                                class="flex-1">Groceries</span><span class="text-slate-300"><svg class="w-4 h-4"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg></span></a>
-                        <div class="cat-fly absolute left-full top-0 bottom-0 w-[min(620px,50vw)] card !rounded-2xl p-7 z-30 overflow-hidden"
-                            style="background:linear-gradient(135deg,#fff 55%,#e4f4ef)">
-                            <div class="flex items-center gap-3 mb-5"><span class="text-3xl">🧺</span>
-                                <h3 class="text-lg font-bold text-slate-900">Groceries</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6">
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Pantry</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Rice &
-                                                Dal</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Cooking
-                                                Oil</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Spices</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Snacks & Drinks
-                                    </h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Biscuits</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Juices</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Tea &
-                                                Coffee</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Fresh</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Fruits</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Vegetables</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Eggs</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <a href="shop.html" class="btn btn-primary btn-sm absolute left-7 bottom-6">Shop all
-                                Groceries <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M5 12h14" />
-                                    <path d="m12 5 7 7-7 7" />
-                                </svg></a>
-                            <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-90 select-none"
-                                aria-hidden="true">🧺</span>
-                        </div>
-                    </li>
-                    <li><a href="shop.html"
-                            class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
-                            <span class="w-7 text-xl leading-none text-center">🕶️</span><span
-                                class="flex-1">Accessories</span><span class="text-slate-300"><svg class="w-4 h-4"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="m9 18 6-6-6-6" />
-                                </svg></span></a>
-                        <div class="cat-fly absolute left-full top-0 bottom-0 w-[min(620px,50vw)] card !rounded-2xl p-7 z-30 overflow-hidden"
-                            style="background:linear-gradient(135deg,#fff 55%,#efe9f8)">
-                            <div class="flex items-center gap-3 mb-5"><span class="text-3xl">🕶️</span>
-                                <h3 class="text-lg font-bold text-slate-900">Accessories</h3>
-                            </div>
-                            <div class="grid grid-cols-3 gap-6">
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Eyewear & Watches
-                                    </h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Sunglasses</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Analog
-                                                Watches</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">Bags</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Backpacks</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Handbags</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">More</h4>
-                                    <ul class="space-y-1.5">
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Belts</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Caps</a>
-                                        </li>
-                                        <li><a href="shop.html"
-                                                class="text-[13px] text-slate-600 hover:text-brand-600">Jewellery</a>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <a href="shop.html" class="btn btn-primary btn-sm absolute left-7 bottom-6">Shop all
-                                Accessories <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M5 12h14" />
-                                    <path d="m12 5 7 7-7 7" />
-                                </svg></a>
-                            <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-90 select-none"
-                                aria-hidden="true">🕶️</span>
-                        </div>
-                    </li>
+                            @endif
+                        </li>
+                    @endforeach
                 </ul>
-                <a href="shop.html"
-                    class="border-t border-slate-100 px-5 py-3 text-[13px] font-semibold text-brand-600 hover:bg-brand-50 rounded-b-2xl flex items-center justify-between">View
-                    all products <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <a href="{{ route('frontend.all-products') }}"
+                    class="border-t border-slate-100 px-5 py-3 text-[13px] font-semibold text-brand-600 hover:bg-brand-50 rounded-b-2xl flex items-center justify-between">
+                    View all products
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M5 12h14" />
                         <path d="m12 5 7 7-7 7" />
-                    </svg></a>
+                    </svg>
+                </a>
             </aside>
-            <div class="hero-slider relative rounded-2xl overflow-hidden" aria-roledescription="carousel"
-                aria-label="Featured offers" data-hero>
-                <div class="hero-track relative">
-                    <div class="hero-slide sl-green is-active" role="group" aria-roledescription="slide"
-                        aria-label="1 of 4">
-                        <div class="h-full grid lg:grid-cols-[1fr_1.05fr] items-center gap-2 px-6 sm:px-10">
-                            <div class="hero-copy relative z-10 pt-10 pb-2 lg:py-0 text-center lg:text-left">
-                                <p class="text-xs font-medium text-brand-700 tracking-[0.25em]">TRENDING COLLECTION
-                                </p>
-                                <h2
-                                    class="mt-3 text-[2.15rem] sm:text-5xl lg:text-[2.6rem] xl:text-[3.1rem] leading-[1.1] font-bold text-slate-900">
-                                    Better Products<br><span class="text-brand-600">Brighter Living</span></h2>
-                                <p class="mt-4 text-sm text-slate-600 max-w-sm leading-relaxed mx-auto lg:mx-0">
-                                    Discover high-quality
-                                    products at the best price. Shop now and make your life easier.</p>
-                                <div class="mt-6 flex flex-wrap items-center gap-3 justify-center lg:justify-start">
-                                    <a href="shop.html" class="btn btn-dark !py-3 !px-6">Shop Now <svg class="w-4 h-4"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M5 12h14" />
-                                            <path d="m12 5 7 7-7 7" />
-                                        </svg></a>
-                                    <a href="#flash" class="btn btn-light border border-slate-200 !py-3"><span
-                                            class="text-brand-600"><svg class="w-5 h-5" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="1.8"
-                                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <polygon points="10 8 16 12 10 16 10 8" />
-                                            </svg></span> Watch Video</a>
+            @if (!empty($sliders) && count($sliders))
+                <div class="hero-slider relative rounded-2xl overflow-hidden" aria-roledescription="carousel"
+                    aria-label="Featured offers" data-hero>
+                    <div class="hero-track relative">
+                        @foreach ($sliders as $index => $slider)
+                            @php
+                                $isFirst = $index === 0;
+
+                                $sliderImage = !empty($slider['photos']) ? uploaded_asset($slider['photos']) : null;
+
+                                $starCount = (int) ($slider['star_count'] ?? 0);
+
+                                $sliderLink = $slider['button_link'] ?? '#';
+
+                                // Alternate overlay darkness for visual variety
+                                $overlayClass =
+                                    $index % 2 === 0
+                                        ? 'bg-gradient-to-r from-green/70 via-green/50 to-green/20'
+                                        : 'bg-gradient-to-r from-green/75 via-green/55 to-green/25';
+                            @endphp
+
+                            <div class="hero-slide {{ $isFirst ? 'is-active' : '' }}" role="group"
+                                aria-roledescription="slide" aria-label="{{ $index + 1 }} of {{ count($sliders) }}"
+                                @if (!$isFirst) aria-hidden="true" @endif>
+
+                                <div class="relative w-full h-full">
+
+                                    {{-- ---------- FULL-BLEED BACKGROUND IMAGE ---------- --}}
+                                    @if ($sliderImage)
+                                        <img src="{{ $sliderImage }}" alt="{{ $slider['title'] ?? 'Slide' }}"
+                                            class="absolute inset-0 w-full h-full object-cover object-center"
+                                            loading="{{ $isFirst ? 'eager' : 'lazy' }}">
+                                    @else
+                                        {{-- Fallback gradient if no image --}}
+                                        <div class="absolute inset-0 bg-gradient-to-br from-brand-700 to-brand-900"></div>
+                                    @endif
+
+                                    {{-- ---------- DARK OVERLAY ---------- --}}
+                                    <div class="absolute inset-0 {{ $overlayClass }}"></div>
+
+                                    {{-- ---------- CONTENT ON TOP ---------- shop --}}
+                                    <div class="relative z-10 h-full flex items-center">
+                                        <div
+                                            class="w-full px-6 sm:px-10 lg:px-14 py-10 lg:py-16
+                                        grid lg:grid-cols-2 items-center gap-6">
+
+                                            {{-- Text block --}}
+                                            <div class="hero-copy text-center lg:text-left max-w-xl mx-auto lg:mx-0">
+                                                {{-- Review row --}}
+                                                @if (!empty($slider['customer_review']) || $starCount > 0)
+                                                    <div
+                                                        class="mt-4 flex items-center gap-2 justify-center lg:justify-start">
+                                                        @if ($starCount > 0)
+                                                            <span class="inline-flex text-star">
+                                                                @for ($i = 1; $i <= 5; $i++)
+                                                                    <svg class="w-4 h-4" viewBox="0 0 24 24"
+                                                                        fill="{{ $i <= $starCount ? 'currentColor' : 'none' }}"
+                                                                        stroke="currentColor" stroke-width="1.8">
+                                                                        <polygon
+                                                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                                                    </svg>
+                                                                @endfor
+                                                            </span>
+                                                        @endif
+
+                                                        @if (!empty($slider['customer_review']))
+                                                            <p class="text-xs text-white/80 italic">
+                                                                “{{ $slider['customer_review'] }}”
+                                                            </p>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div class="hidden lg:block"></div>
+                                            {{-- Shop --}}
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
-                            <div class="hero-art relative h-[260px] sm:h-[330px] lg:h-[430px]" aria-hidden="true">
-                                <div
-                                    class="absolute left-[30%] top-2 w-24 h-24 rounded-full bg-white badge-circle grid place-items-center text-center leading-tight shadow-lg">
-                                    <span class="text-[10px] text-slate-500">UP TO<b
-                                            class="block text-3xl text-brand-700 -my-0.5">70%</b><b
-                                            class="text-brand-700 text-xs">OFF</b></span>
+                        @endforeach
+
+                        {{-- ---------- CONTROLS ---------- --}}
+                        <div class="hero-ctrl absolute left-0 right-0 bottom-4 z-20 pointer-events-none">
+                            <div class="px-6 sm:px-10 flex items-center justify-center lg:justify-between gap-4">
+
+                                {{-- Dots --}}
+                                <div class="flex items-center gap-2 pointer-events-auto" role="tablist">
+                                    @foreach ($sliders as $index => $slider)
+                                        <button class="hero-dot {{ $index === 0 ? 'is-active' : '' }}"
+                                            data-hero-dot="{{ $index }}"
+                                            aria-label="Go to slide {{ $index + 1 }}">
+                                            <i></i>
+                                        </button>
+                                    @endforeach
                                 </div>
-                                <p class="hidden md:block absolute right-0 top-4 text-right text-2xl text-brand-800 leading-tight -rotate-6"
-                                    style="font-family:'Segoe Script','Brush Script MT',cursive">Good Things<br>For
-                                    A Better You</p>
-                                <div class="absolute left-[6%] right-[2%] bottom-4 h-14 hero-podium"></div><span
-                                    class="absolute left-[6%] bottom-[56px] text-[6.5rem] md:text-[9rem] floaty"
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">🎧</span><span
-                                    class="absolute left-[34%] bottom-[62px] text-[4.5rem] md:text-[6.5rem] "
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">🪴</span><span
-                                    class="absolute left-[52%] bottom-[92px] text-[7rem] md:text-[10rem] floaty"
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));animation-delay:-2s">🧃</span><span
-                                    class="absolute right-[4%] bottom-[68px] text-[5.5rem] md:text-[7.5rem] "
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">⌚</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hero-slide sl-dark " role="group" aria-roledescription="slide" aria-label="2 of 4"
-                        aria-hidden="true">
-                        <div class="h-full grid lg:grid-cols-[1fr_1.05fr] items-center gap-2 px-6 sm:px-10">
-                            <div class="hero-copy relative z-10 pt-10 pb-2 lg:py-0 text-center lg:text-left">
-                                <p class="text-xs font-medium text-brand-700 tracking-[0.25em]">FLASH SALE · ENDS
-                                    SOON</p>
-                                <h2
-                                    class="mt-3 text-[2.15rem] sm:text-5xl lg:text-[2.6rem] xl:text-[3.1rem] leading-[1.1] font-bold text-slate-900">
-                                    Smart Gadgets<br><span class="text-amber-300">From ৳499</span></h2>
-                                <p class="mt-4 text-sm text-slate-600 max-w-sm leading-relaxed mx-auto lg:mx-0">
-                                    Watches, earbuds,
-                                    speakers and more. Original products with 6-month warranty and cash on delivery.
-                                </p>
-                                <div class="mt-6 flex flex-wrap items-center gap-3 justify-center lg:justify-start">
-                                    <a href="shop.html" class="btn btn-dark !py-3 !px-6">Shop Gadgets <svg
-                                            class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                            aria-hidden="true">
-                                            <path d="M5 12h14" />
-                                            <path d="m12 5 7 7-7 7" />
-                                        </svg></a>
-                                    <a href="#flash" class="btn btn-light border border-slate-200 !py-3"><span
-                                            class="text-brand-600"><svg class="w-5 h-5" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="1.8"
-                                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <polygon points="10 8 16 12 10 16 10 8" />
-                                            </svg></span> Watch Video</a>
-                                </div>
-                            </div>
-                            <div class="hero-art relative h-[260px] sm:h-[330px] lg:h-[430px]" aria-hidden="true">
-                                <div
-                                    class="absolute right-[6%] top-2 bg-amber-300 text-brand-900 rounded-2xl px-4 py-2.5 font-bold leading-tight rotate-6 shadow-lg text-center">
-                                    <span class="text-[11px] font-medium block">Save up to</span><span
-                                        class="text-2xl">৳1,001</span>
-                                </div>
-                                <div
-                                    class="absolute left-[10%] right-[8%] bottom-5 h-12 rounded-[50%] bg-black/25 blur-md">
-                                </div>
-                                <span class="absolute left-[4%] bottom-[50px] text-[7rem] md:text-[10rem] floaty"
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">⌚</span><span
-                                    class="absolute left-[38%] bottom-[70px] text-[6rem] md:text-[8.5rem] floaty"
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));animation-delay:-1.5s">🎧</span><span
-                                    class="absolute right-[6%] bottom-[56px] text-[5.5rem] md:text-[7.5rem] "
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">🔊</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hero-slide sl-rose " role="group" aria-roledescription="slide" aria-label="3 of 4"
-                        aria-hidden="true">
-                        <div class="h-full grid lg:grid-cols-[1fr_1.05fr] items-center gap-2 px-6 sm:px-10">
-                            <div class="hero-copy relative z-10 pt-10 pb-2 lg:py-0 text-center lg:text-left">
-                                <p class="text-xs font-medium text-brand-700 tracking-[0.25em]">NEW ARRIVALS</p>
-                                <h2
-                                    class="mt-3 text-[2.15rem] sm:text-5xl lg:text-[2.6rem] xl:text-[3.1rem] leading-[1.1] font-bold text-slate-900">
-                                    Fresh Styles<br><span class="text-rose-600">For Every Season</span></h2>
-                                <p class="mt-4 text-sm text-slate-600 max-w-sm leading-relaxed mx-auto lg:mx-0">
-                                    Hijabs, sneakers, kids
-                                    wear and accessories. New collection added every week.</p>
-                                <div class="mt-6 flex flex-wrap items-center gap-3 justify-center lg:justify-start">
-                                    <a href="shop.html" class="btn btn-dark !py-3 !px-6">Explore Fashion <svg
-                                            class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                            aria-hidden="true">
-                                            <path d="M5 12h14" />
-                                            <path d="m12 5 7 7-7 7" />
-                                        </svg></a>
-                                    <a href="#flash" class="btn btn-light border border-slate-200 !py-3"><span
-                                            class="text-brand-600"><svg class="w-5 h-5" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="1.8"
-                                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <polygon points="10 8 16 12 10 16 10 8" />
-                                            </svg></span> Watch Video</a>
-                                </div>
-                            </div>
-                            <div class="hero-art relative h-[260px] sm:h-[330px] lg:h-[430px]" aria-hidden="true">
-                                <div
-                                    class="absolute left-[4%] top-4 bg-white rounded-full px-4 py-2 text-xs font-semibold text-rose-600 shadow-lg flex items-center gap-2">
-                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>240+ new styles
-                                </div>
-                                <div class="absolute left-[6%] right-[4%] bottom-4 h-14 rounded-[50%/40%] bg-rose-200/70">
-                                </div><span class="absolute left-[4%] bottom-[48px] text-[6.5rem] md:text-[9rem] "
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">🧕</span><span
-                                    class="absolute left-[32%] bottom-[60px] text-[6rem] md:text-[8.5rem] floaty"
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">👗</span><span
-                                    class="absolute left-[60%] bottom-[48px] text-[5rem] md:text-[6.5rem] "
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">👟</span><span
-                                    class="absolute right-[2%] top-[22%] text-[3.5rem] md:text-[5rem] floaty"
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));animation-delay:-3s">🕶️</span>
+
+                                {{-- Arrows --}}
+                                @if (count($sliders) > 1)
+                                    <div class="hidden md:flex items-center gap-2 pointer-events-auto">
+                                        <button class="hero-arrow" data-hero-prev aria-label="Previous slide">
+                                            <svg class="w-5 h-5 rotate-180" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                                stroke-linejoin="round" aria-hidden="true">
+                                                <path d="m9 18 6-6-6-6" />
+                                            </svg>
+                                        </button>
+                                        <button class="hero-arrow" data-hero-next aria-label="Next slide">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                                stroke-linejoin="round" aria-hidden="true">
+                                                <path d="m9 18 6-6-6-6" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                @endif
+
                             </div>
                         </div>
-                    </div>
-                    <div class="hero-slide sl-mint " role="group" aria-roledescription="slide" aria-label="4 of 4"
-                        aria-hidden="true">
-                        <div class="h-full grid lg:grid-cols-[1fr_1.05fr] items-center gap-2 px-6 sm:px-10">
-                            <div class="hero-copy relative z-10 pt-10 pb-2 lg:py-0 text-center lg:text-left">
-                                <p class="text-xs font-medium text-brand-700 tracking-[0.25em]">HOME & LIVING</p>
-                                <h2
-                                    class="mt-3 text-[2.15rem] sm:text-5xl lg:text-[2.6rem] xl:text-[3.1rem] leading-[1.1] font-bold text-slate-900">
-                                    Make Your Home<br><span class="text-brand-600">More Beautiful</span></h2>
-                                <p class="mt-4 text-sm text-slate-600 max-w-sm leading-relaxed mx-auto lg:mx-0">
-                                    Furniture, kitchen
-                                    appliances and decor that make every room feel like yours.</p>
-                                <div class="mt-6 flex flex-wrap items-center gap-3 justify-center lg:justify-start">
-                                    <a href="shop.html" class="btn btn-dark !py-3 !px-6">Shop Home <svg class="w-4 h-4"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                            <path d="M5 12h14" />
-                                            <path d="m12 5 7 7-7 7" />
-                                        </svg></a>
-                                    <a href="#flash" class="btn btn-light border border-slate-200 !py-3"><span
-                                            class="text-brand-600"><svg class="w-5 h-5" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="1.8"
-                                                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                <circle cx="12" cy="12" r="10" />
-                                                <polygon points="10 8 16 12 10 16 10 8" />
-                                            </svg></span> Watch Video</a>
-                                </div>
-                            </div>
-                            <div class="hero-art relative h-[260px] sm:h-[330px] lg:h-[430px]" aria-hidden="true">
-                                <div
-                                    class="absolute right-[8%] top-3 w-24 h-24 rounded-full bg-white badge-circle grid place-items-center text-center leading-tight shadow-lg">
-                                    <span class="text-[10px] text-slate-500">FLAT<b
-                                            class="block text-3xl text-brand-700 -my-0.5">30%</b><b
-                                            class="text-brand-700 text-xs">OFF</b></span>
-                                </div>
-                                <div class="absolute left-[4%] right-[4%] bottom-4 h-14 rounded-[50%/40%] bg-brand-200/70">
-                                </div><span class="absolute left-[4%] bottom-[44px] text-[8rem] md:text-[11rem] "
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">🛋️</span><span
-                                    class="absolute left-[48%] bottom-[56px] text-[5rem] md:text-[7rem] "
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">🪴</span><span
-                                    class="absolute right-[4%] bottom-[64px] text-[5rem] md:text-[6.5rem] floaty"
-                                    style="filter:drop-shadow(0 18px 18px rgba(0,0,0,.2));">🍳</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hero-ctrl absolute left-0 right-0 bottom-4 z-20 pointer-events-none">
-                        <div class="px-6 sm:px-10 flex items-center justify-center lg:justify-between gap-4">
-                            <div class="flex items-center gap-2 pointer-events-auto" role="tablist"><button
-                                    class="hero-dot is-active" data-hero-dot="0"
-                                    aria-label="Go to slide 1"><i></i></button><button class="hero-dot "
-                                    data-hero-dot="1" aria-label="Go to slide 2"><i></i></button><button
-                                    class="hero-dot " data-hero-dot="2"
-                                    aria-label="Go to slide 3"><i></i></button><button class="hero-dot "
-                                    data-hero-dot="3" aria-label="Go to slide 4"><i></i></button></div>
-                            <div class="hidden md:flex items-center gap-2 pointer-events-auto">
-                                <button class="hero-arrow" data-hero-prev aria-label="Previous slide"><svg
-                                        class="w-5 h-5 rotate-180" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <path d="m9 18 6-6-6-6" />
-                                    </svg></button>
-                                <button class="hero-arrow" data-hero-next aria-label="Next slide"><svg class="w-5 h-5"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="m9 18 6-6-6-6" />
-                                    </svg></button>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
     </section>
     <section class="container-fluid mt-5">
@@ -883,8 +391,8 @@
     </section>
 
     <section class="container-fluid pt-8 pb-2 lg:hidden">
-        <div class="flex gap-5 lg:justify-between overflow-x-auto snap-x pb-2 -mx-4 px-4 no-scrollbar"><a href="shop.html"
-                class="cat-item flex flex-col items-center gap-2 w-[96px] shrink-0 snap-start"><span
+        <div class="flex gap-5 lg:justify-between overflow-x-auto snap-x pb-2 -mx-4 px-4 no-scrollbar">
+            <a href="shop.html" class="cat-item flex flex-col items-center gap-2 w-[96px] shrink-0 snap-start"><span
                     class="cat-circle w-[88px] h-[88px] rounded-full border border-slate-200 grid place-items-center text-4xl"
                     style="background:linear-gradient(135deg,#e3f1e5,#fff)">👕</span><span
                     class="text-[13px] font-medium text-slate-800 text-center leading-tight">Fashion</span><span
@@ -923,7 +431,8 @@
                     class="cat-circle w-[88px] h-[88px] rounded-full border border-slate-200 grid place-items-center text-4xl"
                     style="background:linear-gradient(135deg,#efe9f8,#fff)">🕶️</span><span
                     class="text-[13px] font-medium text-slate-800 text-center leading-tight">Accessories</span><span
-                    class="text-[11px] text-slate-400 -mt-1.5">26+ items</span></a></div>
+                    class="text-[11px] text-slate-400 -mt-1.5">26+ items</span></a>
+        </div>
     </section>
 
     <section id="flash" class="container-fluid pt-8 lg:pt-12">
@@ -1050,32 +559,28 @@
                             class="text-xs text-slate-400 line-through">৳1,999</span></div>
                     <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
                             class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                stroke-linejoin="round" aria-hidden="true">
-                                <polygon
-                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                    fill="currentColor" />
-                            </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                                 aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                                    fill="currentColor" />
+                            </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
@@ -1100,9 +605,8 @@
             </article>
             <article class="card pcard overflow-hidden flex flex-col min-w-[62%] sm:min-w-[40%] snap-start md:min-w-0">
                 <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                        class="block w-full h-full"><img src="https://placehold.co/400x400"
-                            alt="Anti Theft Laptop Bag" width="400" height="400" loading="lazy"
-                            class="w-full h-full object-cover"></a><span
+                        class="block w-full h-full"><img src="https://placehold.co/400x400" alt="Anti Theft Laptop Bag"
+                            width="400" height="400" loading="lazy" class="w-full h-full object-cover"></a><span
                         class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-20%</span>
                     <button
                         class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
@@ -1121,33 +625,29 @@
                             class="font-bold text-brand-700">৳1,599</span><span
                             class="text-xs text-slate-400 line-through">৳1,999</span></div>
                     <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                            class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                stroke-linejoin="round" aria-hidden="true">
-                                <polygon
-                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                    fill="currentColor" />
-                            </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                            class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                                 aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                                    fill="currentColor" />
+                            </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
@@ -1159,11 +659,10 @@
                         </div>
                         <p class="text-[10.5px] text-slate-500 mt-1">85% sold &middot; hurry up</p>
                     </div>
-                    <button data-add data-id="2" data-name="Anti Theft Laptop Bag" data-price="1599"
-                        data-emoji="🎒" data-c1="#f6efe4" data-c2="#ecdfc9"
-                        class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                            stroke-linejoin="round" aria-hidden="true">
+                    <button data-add data-id="2" data-name="Anti Theft Laptop Bag" data-price="1599" data-emoji="🎒"
+                        data-c1="#f6efe4" data-c2="#ecdfc9" class="btn btn-primary btn-sm w-full mt-3"><svg
+                            class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
                             <path d="M3 6h18" />
                             <path d="M16 10a4 4 0 0 1-8 0" />
@@ -1173,8 +672,7 @@
             <article class="card pcard overflow-hidden flex flex-col min-w-[62%] sm:min-w-[40%] snap-start md:min-w-0">
                 <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
                         class="block w-full h-full"><img src="https://placehold.co/400x400" alt="Digital Air Fryer 6L"
-                            width="400" height="400" loading="lazy"
-                            class="w-full h-full object-cover"></a><span
+                            width="400" height="400" loading="lazy" class="w-full h-full object-cover"></a><span
                         class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-29%</span>
                     <button
                         class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
@@ -1193,33 +691,29 @@
                             class="font-bold text-brand-700">৳4,999</span><span
                             class="text-xs text-slate-400 line-through">৳6,999</span></div>
                     <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                            class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                stroke-linejoin="round" aria-hidden="true">
-                                <polygon
-                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                    fill="currentColor" />
-                            </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                            class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                                 aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                                    fill="currentColor" />
+                            </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
@@ -1231,11 +725,10 @@
                         </div>
                         <p class="text-[10.5px] text-slate-500 mt-1">41% sold &middot; hurry up</p>
                     </div>
-                    <button data-add data-id="3" data-name="Digital Air Fryer 6L" data-price="4999"
-                        data-emoji="🍳" data-c1="#fdeee3" data-c2="#f9dcc6"
-                        class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                            stroke-linejoin="round" aria-hidden="true">
+                    <button data-add data-id="3" data-name="Digital Air Fryer 6L" data-price="4999" data-emoji="🍳"
+                        data-c1="#fdeee3" data-c2="#f9dcc6" class="btn btn-primary btn-sm w-full mt-3"><svg
+                            class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
                             <path d="M3 6h18" />
                             <path d="M16 10a4 4 0 0 1-8 0" />
@@ -1244,9 +737,8 @@
             </article>
             <article class="card pcard overflow-hidden flex flex-col min-w-[62%] sm:min-w-[40%] snap-start md:min-w-0">
                 <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                        class="block w-full h-full"><img src="https://placehold.co/400x400"
-                            alt="Men&#x27;s Sports Shoes" width="400" height="400" loading="lazy"
-                            class="w-full h-full object-cover"></a><span
+                        class="block w-full h-full"><img src="https://placehold.co/400x400" alt="Men&#x27;s Sports Shoes"
+                            width="400" height="400" loading="lazy" class="w-full h-full object-cover"></a><span
                         class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-40%</span>
                     <button
                         class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
@@ -1265,27 +757,24 @@
                             class="font-bold text-brand-700">৳1,799</span><span
                             class="text-xs text-slate-400 line-through">৳2,999</span></div>
                     <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                            class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                stroke-linejoin="round" aria-hidden="true">
-                                <polygon
-                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                    fill="currentColor" />
-                            </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                            class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
                                 aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
                             </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polygon
+                                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                                    fill="currentColor" />
+                            </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polygon
                                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                     fill="currentColor" />
@@ -1343,9 +832,8 @@
     <section class="container-fluid mt-12" id="best">
         <div class="flex items-end justify-between gap-4 flex-wrap mb-5">
             <div class="flex items-center gap-3">
-                <span class="text-star"><svg class="w-7 h-7" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                        aria-hidden="true">
+                <span class="text-star"><svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" fill="currentColor" />
                     </svg></span>
                 <div>
@@ -1371,8 +859,8 @@
                         <button
                             class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
                             aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                stroke-linejoin="round" aria-hidden="true">
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                aria-hidden="true">
                                 <path
                                     d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                             </svg></button>
@@ -1391,27 +879,27 @@
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
-                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
-                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
-                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
-                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
@@ -1436,8 +924,8 @@
                         <button
                             class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
                             aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                stroke-linejoin="round" aria-hidden="true">
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                aria-hidden="true">
                                 <path
                                     d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
                             </svg></button>

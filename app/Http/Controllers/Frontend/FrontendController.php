@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Category;
 use App\Models\Admin\Product;
 use Illuminate\Support\Str;
 use Auth;
@@ -12,7 +13,30 @@ class FrontendController extends Controller
 {
     public function home()
     {
-        return view('frontend.pages.home');
+        $categories = \App\Models\Admin\Category::withCount('products')
+            // ->where('is_published', 1)
+            ->latest()
+            ->take(8)
+            ->get();
+
+        $sliders = \App\Models\Admin\Slider::orderBy('order')
+            // ->where('status', 1)   // if you have a status column
+            ->get()
+            ->map(function ($slider) {
+                return [
+                    'id'              => $slider->id,
+                    'title'           => $slider->title,
+                    'sub_title'       => $slider->sub_title,
+                    'button_name'     => $slider->button_name,
+                    'button_link'     => $slider->button_link,
+                    'photos'          => $slider->photos,
+                    'customer_review' => $slider->customer_review,
+                    'star_count'      => $slider->star_count,
+                    'description'     => $slider->description,
+                ];
+            })
+            ->toArray();
+        return view('frontend.pages.home', compact('categories', 'sliders'));
     }
 
     public function allProducts()
@@ -233,5 +257,32 @@ class FrontendController extends Controller
                 'relatedProducts'
             )
         );
+    }
+
+    public function allCategoryProducts(Request $request)
+    {
+        $categorySlug = $request->get('category');
+        $category = null;
+
+        $productsQuery = Product::query();
+
+        // Category filter
+        if ($categorySlug) {
+
+            $category = Category::where('slug', $categorySlug)->firstOrFail();
+
+            $productsQuery->where('category_id', $category->id);
+        }
+
+        $products = $productsQuery
+            // ->where('published', 1)
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('frontend.pages.all-products', compact(
+            'products',
+            'category'
+        ));
     }
 }
