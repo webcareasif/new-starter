@@ -50,6 +50,9 @@
                             {{ !request('category') ? 'checked' : '' }}>
                         All Products
                     </span>
+                    <span class="text-xs text-slate-400">
+                        {{ $categories->sum('products_count') }}
+                    </span>
                 </label>
 
                 @foreach ($categories as $cat)

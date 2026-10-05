@@ -85,9 +85,9 @@
 
         {{-- PRODUCT GALLERY --}}
         <div>
-            <div data-main class="card aspect-square overflow-hidden bg-slate-100">
+            <div data-main class="card aspect-[4/3] overflow-hidden bg-slate-100">
                 @if ($mainImage)
-                    <img src="{{ $mainImage }}" alt="{{ $productName }}" width="800" height="800"
+                    <img src="{{ $mainImage }}" alt="{{ $productName }}" width="400" height="400"
                         class="w-full h-full object-cover">
                 @else
                     <div class="w-full h-full grid place-items-center text-slate-400">No Image</div>
