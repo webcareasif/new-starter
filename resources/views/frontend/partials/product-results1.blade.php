@@ -1,5 +1,3 @@
-{{-- resources/views/frontend/partials/product-results.blade.php --}}
-
 <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
     <p class="text-sm text-slate-500">
         Showing <b class="text-slate-800">{{ $products->firstItem() ?? 0 }}–{{ $products->lastItem() ?? 0 }}</b>
@@ -12,7 +10,6 @@
 
         @foreach ($products as $product)
             @php
-                /* ---------- Base price ---------- */
                 $regularPrice = (float) ($product->price->regular_price ?? 0);
                 $salePriceRaw = $product->price->sale_price ?? null;
                 $salePrice =
@@ -20,87 +17,23 @@
                         ? (float) $salePriceRaw
                         : $regularPrice;
 
-                /* ---------- Product fields ---------- */
+                $discountPercentage =
+                    $regularPrice > 0 && $salePrice < $regularPrice
+                        ? round((($regularPrice - $salePrice) / $regularPrice) * 100)
+                        : 0;
+
                 $productName = $product->name ?? 'Product';
                 $productSlug = $product->slug ?? '#';
                 $productCat = $product->category->category_name ?? ($product->category->name ?? 'Uncategorized');
                 $productImage = $product->thumbnail ? uploaded_asset($product->thumbnail) : null;
 
-                /* ---------- Variants ---------- */
-                $hasVariants = $product->variants && $product->variants->count() > 0;
-
-                $variantsJson = $hasVariants
-                    ? $product->variants
-                        ->map(function ($v) {
-                            $label = '';
-
-                            if (!empty($v->attribute_value)) {
-                                $decoded = json_decode($v->attribute_value, true);
-                                if (is_array($decoded)) {
-                                    $label = implode(' / ', array_values($decoded));
-                                } else {
-                                    $label = (string) $v->attribute_value;
-                                }
-                            }
-
-                            if (empty($label)) {
-                                $label = optional($v->attributeRel)->name ?? 'Option';
-                            }
-
-                            return [
-                                'id' => $v->id,
-                                'label' => $label,
-                                'price' => (float) $v->price,
-                                'stock' => (int) $v->quantity,
-                                'sku' => $v->sku,
-                                'image' => !empty($v->image) ? uploaded_asset($v->image) : null,
-                            ];
-                        })
-                        ->values()
-                        ->toArray()
-                    : [];
-
-                /* ---------- Price Range (for variants) ---------- */
-                if ($hasVariants && count($variantsJson)) {
-                    $variantPrices = array_column($variantsJson, 'price');
-                    $variantPrices = array_filter($variantPrices, fn($p) => $p > 0);
-
-                    if (count($variantPrices)) {
-                        $minVariantPrice = min($variantPrices);
-                        $maxVariantPrice = max($variantPrices);
-
-                        $displayPrice = $minVariantPrice;
-                        $displayPriceMax = $maxVariantPrice;
-                        $hasPriceRange = $maxVariantPrice > $minVariantPrice;
-
-                        $showStrikePrice = $regularPrice > 0 && $regularPrice > $minVariantPrice;
-                    } else {
-                        $displayPrice = $salePrice;
-                        $displayPriceMax = $salePrice;
-                        $hasPriceRange = false;
-                        $showStrikePrice = $regularPrice > $salePrice;
-                    }
-                } else {
-                    $displayPrice = $salePrice;
-                    $displayPriceMax = $salePrice;
-                    $hasPriceRange = false;
-                    $showStrikePrice = $regularPrice > $salePrice;
-                }
-
-                /* ---------- Discount % ---------- */
-                $discountPercentage = 0;
-                if ($showStrikePrice && $regularPrice > 0) {
-                    $discountPercentage = round((($regularPrice - $displayPrice) / $regularPrice) * 100);
-                }
-
-                /* ---------- Stock ---------- */
                 $productStock = (int) ($product->inventory->stock ?? 0);
-                $productInStock = $hasVariants ? collect($variantsJson)->sum('stock') > 0 : $productStock > 0;
+                $productInStock = $productStock > 0;
             @endphp
 
             <article class="card pcard overflow-hidden flex flex-col">
 
-                {{-- ================= Product Image ================= --}}
+                {{-- Product Image --}}
                 <div class="relative pimg aspect-square overflow-hidden bg-slate-100">
                     <a href="{{ route('frontend.product-details', $productSlug) }}" class="block w-full h-full">
                         @if ($productImage)
@@ -137,7 +70,7 @@
                     </button>
                 </div>
 
-                {{-- ================= Product Info ================= --}}
+                {{-- Product Info --}}
                 <div class="p-3.5 flex flex-col flex-1">
                     <p class="text-[11px] text-slate-400 mb-1">{{ $productCat }}</p>
 
@@ -148,31 +81,14 @@
                         </a>
                     </h3>
 
-                    {{-- ================= PRICE ================= --}}
-                    <div class="mt-1.5 flex items-baseline gap-2 flex-wrap">
-                        @if ($hasPriceRange)
-                            <span class="font-bold text-brand-700">
-                                ৳{{ number_format($displayPrice, 0) }}–৳{{ number_format($displayPriceMax, 0) }}
-                            </span>
-                        @else
-                            <span class="font-bold text-brand-700">
-                                ৳{{ number_format($displayPrice, 0) }}
-                            </span>
-                        @endif
-
-                        @if ($showStrikePrice)
+                    <div class="mt-1.5 flex items-baseline gap-2">
+                        <span class="font-bold text-brand-700">৳{{ number_format($salePrice, 0) }}</span>
+                        @if ($discountPercentage > 0)
                             <span class="text-xs text-slate-400 line-through">
                                 ৳{{ number_format($regularPrice, 0) }}
                             </span>
                         @endif
                     </div>
-
-                    {{-- Variant count hint --}}
-                    @if ($hasVariants)
-                        <p class="text-[10px] text-slate-400 mt-0.5">
-                            {{ count($variantsJson) }} options available
-                        </p>
-                    @endif
 
                     <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
                         <span class="inline-flex text-star">
@@ -188,11 +104,8 @@
                         <span>(0)</span>
                     </div>
 
-                    {{-- ================= Add to Cart / Select Options ================= --}}
                     <button type="button" data-add data-id="{{ $product->id }}" data-name="{{ $productName }}"
-                        data-price="{{ $displayPrice }}" data-image="{{ $productImage }}"
-                        data-has-variants="{{ $hasVariants ? '1' : '0' }}" data-variants='@json($variantsJson)'
-                        data-detail-url="{{ route('frontend.product-details', $productSlug) }}"
+                        data-price="{{ $salePrice }}" data-image="{{ $productImage }}"
                         class="btn btn-primary btn-sm w-full mt-3 {{ !$productInStock ? 'opacity-50 cursor-not-allowed' : '' }}"
                         {{ !$productInStock ? 'disabled' : '' }}>
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -201,7 +114,7 @@
                             <path d="M3 6h18" />
                             <path d="M16 10a4 4 0 0 1-8 0" />
                         </svg>
-                        {{ !$productInStock ? 'Out of Stock' : ($hasVariants ? 'Select Options' : 'Add to Cart') }}
+                        {{ $productInStock ? 'Add to Cart1' : 'Out of Stock' }}
                     </button>
                 </div>
             </article>

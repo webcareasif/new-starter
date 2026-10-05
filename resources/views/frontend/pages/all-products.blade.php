@@ -67,8 +67,8 @@
             {{-- Max Price --}}
             <div class="card p-5">
                 <h3 class="font-semibold text-slate-900 mb-3 text-sm">Max Price</h3>
-                <input id="priceRange" name="max_price" type="range" min="200" max="10000" step="100"
-                    value="{{ request('max_price', 5000) }}" class="filter-input" aria-label="Maximum price">
+                <input id="priceRange" name="max_price" type="range" min="200" max="15000" step="100"
+                    value="{{ request('max_price', 15000) }}" class="filter-input" aria-label="Maximum price">
                 <div class="flex justify-between text-xs text-slate-500 mt-1">
                     <span>৳200</span>
                     <b id="priceOut" class="text-brand-700">৳{{ number_format(request('max_price', 5000)) }}</b>
@@ -122,6 +122,21 @@
         {{-- Product Listing --}}
         <div>
             <div id="productResults">
+                {{-- Sort Bar --}}
+                <div class="flex flex-wrap items-center justify-end gap-3 mb-5">
+                    <label class="sr-only" for="sort">Sort</label>
+                    <select id="sort" name="sort" class="field !w-auto !py-2 !text-[13px]">
+                        <option value="" {{ request('sort') === null ? 'selected' : '' }}>Sort: Featured</option>
+                        <option value="price_low" {{ request('sort') === 'price_low' ? 'selected' : '' }}>Price: Low to
+                            High</option>
+                        <option value="price_high" {{ request('sort') === 'price_high' ? 'selected' : '' }}>Price: High to
+                            Low</option>
+                        <option value="top_rated" {{ request('sort') === 'top_rated' ? 'selected' : '' }}>Top Rated
+                        </option>
+                        <option value="newest" {{ request('sort') === 'newest' ? 'selected' : '' }}>Newest</option>
+                    </select>
+                </div>
+
                 @include('frontend.partials.product-results', ['products' => $products])
             </div>
         </div>
@@ -289,5 +304,18 @@
                     });
             });
         })();
+    </script>
+
+    <script>
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('[data-add]');
+            if (!btn || btn.disabled) return;
+            if (btn.dataset.hasVariants !== '1') return;
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            const url = btn.dataset.detailUrl;
+            if (url) window.location.href = url;
+        }, true); // capture phase = runs before other handlers
     </script>
 @endpush
