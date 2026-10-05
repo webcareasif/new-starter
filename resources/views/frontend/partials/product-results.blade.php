@@ -211,10 +211,27 @@
 
     {{-- Pagination --}}
     <div class="flex justify-center mt-10">
-        {{ $products->links() }}
+        {{ $products->links('frontend.partials.pagination') }}
     </div>
 @else
     <div class="py-20 text-center">
-        <p class="text-slate-500">No products found.</p>
+        <div
+            class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-yellow-100 text-4xl shadow-sm">
+            🛒
+        </div>
+
+        <h3 class="text-xl font-bold text-slate-800">
+            Oops... The shelves are shy
+        </h3>
+
+        <p class="mt-2 text-slate-500">
+            No products found. They probably went out for snacks.
+        </p>
+
+        <button onclick="location.reload()"
+            class="mt-6 rounded-full bg-indigo-600 px-5 py-2.5 font-medium text-white transition hover:bg-indigo-700 hover:shadow-lg">
+            Search Again
+        </button>
     </div>
+
 @endif

@@ -255,8 +255,8 @@
                     if (allCat) allCat.checked = true;
 
                     if (priceRange) {
-                        priceRange.value = 5000;
-                        priceOut.textContent = '৳5,000';
+                        priceRange.value = 15000;
+                        priceOut.textContent = '৳15,000';
                     }
 
                     if (sortSelect) sortSelect.value = '';
