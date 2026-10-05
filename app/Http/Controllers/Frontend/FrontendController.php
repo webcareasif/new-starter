@@ -41,7 +41,7 @@ class FrontendController extends Controller
 
     public function allProducts()
     {
-        return $products = Product::with([
+        $products = Product::with([
             'price',
             'category',
             'inventory',
@@ -89,7 +89,7 @@ class FrontendController extends Controller
         return view('frontend.pages.all-products', compact('products', 'categories'));
     }
 
-    public function productDetail($slug)
+    public function productDetail1111($slug)
     {
         $product = Product::with([
             'price',
@@ -265,82 +265,206 @@ class FrontendController extends Controller
         );
     }
 
-    public function allCategoryProducts11(Request $request)
+    public function productDetail($slug)
     {
-        $categorySlug = $request->get('category');
-        $category     = null;
+        $product = Product::with([
+            'price',
+            'category',
+            'subcategory',
+            'brand',
+            'inventory',
+            'shipping',
+            'seo',
+            'taxes',
+            'variants.attributeRel',
+            'reviews.user',
+            'reviews.dummyReview',
+        ])
+            ->where('slug', $slug)
+            ->where('is_published', 1)
+            ->firstOrFail();
 
-        $productsQuery = Product::with(['price', 'category', 'inventory', 'brand', 'reviews'])
-            ->where('is_published', 1);
+        /* ---------------- Images ---------------- */
+        $photoIds = [];
 
-        if ($categorySlug) {
-            $category = Category::where('slug', $categorySlug)->firstOrFail();
-            $productsQuery->where('category_id', $category->id);
+        if (!empty($product->photos)) {
+            $photoIds = is_array($product->photos)
+                ? $product->photos
+                : json_decode($product->photos, true);
+
+            $photoIds = is_array($photoIds) ? $photoIds : [];
         }
 
-        if ($request->filled('max_price')) {
-            $maxPrice = (float) $request->max_price;
-            $productsQuery->whereHas('price', function ($q) use ($maxPrice) {
-                $q->whereRaw('COALESCE(NULLIF(sale_price, 0), regular_price) <= ?', [$maxPrice]);
-            });
+        $thumbnail = $product->thumbnail
+            ? uploaded_asset($product->thumbnail)
+            : null;
+
+        $galleryImages = [];
+
+        foreach ($photoIds as $photoId) {
+            if (!$photoId) {
+                continue;
+            }
+
+            if ((string) $photoId === (string) $product->thumbnail) {
+                continue;
+            }
+
+            $image = uploaded_asset($photoId);
+
+            if ($image) {
+                $galleryImages[] = $image;
+            }
         }
 
-        if ($request->filled('rating')) {
-            $minRating = (float) $request->rating;
-            $productsQuery->withAvg('reviews', 'rating')
-                ->having('reviews_avg_rating', '>=', $minRating);
+        /* ---------------- Price ---------------- */
+        $regularPrice = (float) optional($product->price)->regular_price;
+
+        $salePrice = optional($product->price)->sale_price !== null
+            ? (float) $product->price->sale_price
+            : null;
+
+        $currentPrice = ($salePrice !== null && $salePrice > 0 && $salePrice < $regularPrice)
+            ? $salePrice
+            : $regularPrice;
+
+        $discountPercentage = 0;
+
+        if ($regularPrice > 0 && $currentPrice < $regularPrice) {
+            $discountPercentage = round(
+                (($regularPrice - $currentPrice) / $regularPrice) * 100
+            );
         }
 
-        if ($request->boolean('in_stock')) {
-            $productsQuery->whereHas('inventory', function ($q) {
-                $q->where('stock', '>', 0);
-            });
+        $savingAmount = max(0, $regularPrice - $currentPrice);
+
+        /* ---------------- Reviews ---------------- */
+        $reviews = $product->reviews ?? collect();
+
+        $reviewCount = $reviews->count();
+
+        $averageRating = $reviewCount > 0
+            ? round((float) $reviews->avg('rating'), 1)
+            : 0;
+
+        /* ---------------- Variants ---------------- */
+        $variants = $product->variants->map(function ($variant) {
+            $attrs = [];
+
+            if (!empty($variant->attribute_value)) {
+                $decoded = is_array($variant->attribute_value)
+                    ? $variant->attribute_value
+                    : json_decode($variant->attribute_value, true);
+
+                if (is_array($decoded)) {
+                    $attrs = $decoded;
+                }
+            }
+
+            $label = !empty($attrs)
+                ? implode(' / ', array_values($attrs))
+                : (optional($variant->attributeRel)->name ?? 'Option');
+
+            return [
+                'id'         => $variant->id,
+                'label'      => $label,
+                'price'      => (float) $variant->price,
+                'stock'      => (int) $variant->quantity,
+                'sku'        => $variant->sku,
+                'attributes' => $attrs, // ["Color" => "Black", "Age" => "Age 1/2"]
+            ];
+        })->values();
+
+        /*
+     * Group attributes dynamically.
+     * ["Color" => ["Black", "DarkOliveGreen"], "Age" => ["Age 1/2", "Age 3/4"]]
+     * New attributes (Size, Material...) appear automatically.
+     */
+        $attributeGroups = [];
+
+        foreach ($variants as $v) {
+            foreach ($v['attributes'] as $name => $value) {
+                if (!in_array($value, $attributeGroups[$name] ?? [], true)) {
+                    $attributeGroups[$name][] = $value;
+                }
+            }
         }
 
-        if ($request->boolean('on_sale')) {
-            $productsQuery->whereHas('price', function ($q) {
-                $q->whereNotNull('sale_price')
-                    ->whereColumn('sale_price', '<', 'regular_price');
-            });
+        /* ---------------- Stock ---------------- */
+        // Variant product: total of variant quantities. Simple product: inventory stock.
+        $stock = $variants->count()
+            ? (int) $variants->sum('stock')
+            : (int) optional($product->inventory)->stock;
+
+        $inStock = $stock > 0;
+
+        /* ---------------- Related products ---------------- */
+        $relatedProducts = Product::with([
+            'price',
+            'category',
+            'inventory',
+            'brand',
+            'reviews',
+        ])
+            ->where('is_published', 1)
+            ->where('id', '!=', $product->id)
+            ->where('category_id', $product->category_id)
+            ->latest()
+            ->take(8)
+            ->get();
+
+        foreach ($relatedProducts as $relatedProduct) {
+            $relatedRegular = (float) optional($relatedProduct->price)->regular_price;
+
+            $relatedSale = optional($relatedProduct->price)->sale_price !== null
+                ? (float) $relatedProduct->price->sale_price
+                : null;
+
+            $relatedCurrent = ($relatedSale !== null && $relatedSale > 0 && $relatedSale < $relatedRegular)
+                ? $relatedSale
+                : $relatedRegular;
+
+            $relatedProduct->display_price = $relatedCurrent;
+            $relatedProduct->display_regular_price = $relatedRegular;
+
+            $relatedProduct->discount_percentage = (
+                $relatedRegular > 0 && $relatedCurrent < $relatedRegular
+            )
+                ? round((($relatedRegular - $relatedCurrent) / $relatedRegular) * 100)
+                : 0;
+
+            $relatedProduct->average_rating = $relatedProduct->reviews->count()
+                ? round((float) $relatedProduct->reviews->avg('rating'), 1)
+                : 0;
+
+            $relatedProduct->review_count = $relatedProduct->reviews->count();
+
+            $relatedProduct->thumbnail_url = $relatedProduct->thumbnail
+                ? uploaded_asset($relatedProduct->thumbnail)
+                : null;
         }
 
-        switch ($request->get('sort')) {
-            case 'price_low':
-                $productsQuery->join('product_prices', 'products.id', '=', 'product_prices.product_id')
-                    ->orderByRaw('COALESCE(NULLIF(product_prices.sale_price, 0), product_prices.regular_price) ASC')
-                    ->select('products.*');
-                break;
-            case 'price_high':
-                $productsQuery->join('product_prices', 'products.id', '=', 'product_prices.product_id')
-                    ->orderByRaw('COALESCE(NULLIF(product_prices.sale_price, 0), product_prices.regular_price) DESC')
-                    ->select('products.*');
-                break;
-            case 'top_rated':
-                $productsQuery->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating');
-                break;
-            case 'newest':
-            default:
-                $productsQuery->latest();
-                break;
-        }
-
-        $products = $productsQuery->paginate(20)->withQueryString();
-
-        $categories = Category::withCount('products')->latest()->take(8)->get();
-
-        // ----- AJAX -----
-        if ($request->ajax() || $request->wantsJson()) {
-            $html = view('frontend.partials.product-results', compact('products'))->render();
-
-            return response()->json([
-                'html'  => $html,
-                'count' => $products->total(),
-                'from'  => $products->firstItem() ?? 0,
-                'to'    => $products->lastItem() ?? 0,
-            ]);
-        }
-
-        return view('frontend.pages.all-products', compact('products', 'category', 'categories'));
+        return view(
+            'frontend.pages.product-detail',
+            compact(
+                'product',
+                'thumbnail',
+                'galleryImages',
+                'regularPrice',
+                'salePrice',
+                'currentPrice',
+                'discountPercentage',
+                'savingAmount',
+                'stock',
+                'inStock',
+                'reviews',
+                'reviewCount',
+                'averageRating',
+                'variants',
+                'attributeGroups',
+                'relatedProducts'
+            )
+        );
     }
 
     public function allCategoryProducts(Request $request)

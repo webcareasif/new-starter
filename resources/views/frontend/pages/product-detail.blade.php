@@ -4,11 +4,11 @@
 
     @php
         $productName = $product->name ?? 'Product';
-        $categoryName = optional($product->category)->name ?? 'Uncategorized';
+        $categoryName = optional($product->category)->category_name ?? 'Uncategorized';
         $categorySlug = optional($product->category)->slug;
         $brandName = optional($product->brand)->name;
         $sku = optional($product->inventory)->sku ?? ($product->sku ?? 'N/A');
-        $unit = optional($product->inventory)->unit ?? 'pc';
+        $unit = $product->unit ?? 'pc';
         $description = $product->description ?? '';
         $shortDescription = $product->short_description ?? '';
 
@@ -39,7 +39,8 @@
         $productReviewCount = (int) ($reviewCount ?? $productReviews->count());
         $productAverageRating = (float) ($averageRating ?? 0);
 
-        $productVariants = $variants ?? [];
+        $productVariants = $variants ?? collect();
+        $productAttributeGroups = $attributeGroups ?? [];
 
         $youtubeId = null;
         if (!empty($product->video_link)) {
@@ -82,9 +83,7 @@
     ============================================================ --}}
     <section class="container-fluid mt-6 grid lg:grid-cols-2 gap-10">
 
-        {{-- ========================================================
-             PRODUCT GALLERY
-        ========================================================= --}}
+        {{-- PRODUCT GALLERY --}}
         <div>
             <div data-main class="card aspect-square overflow-hidden bg-slate-100">
                 @if ($mainImage)
@@ -109,9 +108,7 @@
             @endif
         </div>
 
-        {{-- ========================================================
-             PRODUCT INFORMATION
-        ========================================================= --}}
+        {{-- PRODUCT INFORMATION --}}
         <div>
 
             @if ($displayDiscountPercentage > 0)
@@ -174,28 +171,32 @@
             @endif
 
             {{-- ====================================================
-                 VARIANTS
+                 VARIANTS — one button group per attribute
+                 (Color, Age, Size, Material ... built automatically)
             ===================================================== --}}
-            @if (count($productVariants))
-                <div class="mt-6">
-                    <p class="label mb-2">Available Options</p>
-                    <div class="flex flex-wrap gap-2" id="variantContainer">
-
-                        @foreach ($productVariants as $variant)
-                            <button type="button" data-variant data-variant-id="{{ $variant['id'] }}"
-                                data-price="{{ $variant['price'] }}" data-stock="{{ $variant['stock'] }}"
-                                class="variant-btn px-4 py-2 rounded-lg border border-slate-200 text-[13px] font-medium hover:border-brand-600 transition {{ $loop->first ? 'active-variant border-brand-600 bg-brand-50 text-brand-700' : '' }}"
-                                data-default="{{ $loop->first ? 'true' : 'false' }}">
-
-                                {{ $variant['label'] }}
-
-                                <span class="text-xs text-slate-400 ml-1">
-                                    ৳{{ number_format($variant['price'], 0) }}
-                                </span>
-                            </button>
-                        @endforeach
-
-                    </div>
+            @if (count($productVariants) && count($productAttributeGroups))
+                <div class="mt-6 space-y-4" id="variantContainer">
+                    @foreach ($productAttributeGroups as $attrName => $values)
+                        <div data-attr-group="{{ $attrName }}">
+                            <p class="label mb-2">
+                                {{ $attrName }}:
+                                <span class="font-semibold text-slate-800" data-attr-selected></span>
+                            </p>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach ($values as $value)
+                                    <button type="button" data-attr-btn data-attr-name="{{ $attrName }}"
+                                        data-attr-value="{{ $value }}"
+                                        class="variant-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-[13px] font-medium hover:border-brand-600 transition">
+                                        @if (strtolower($attrName) === 'color')
+                                            <span class="w-4 h-4 rounded-full border border-slate-300 inline-block"
+                                                style="background-color: {{ $value }}"></span>
+                                        @endif
+                                        {{ $value }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @endif
 
@@ -223,14 +224,16 @@
 
                 <button type="button" data-add data-id="{{ $product->id }}" data-name="{{ $productName }}"
                     data-price="{{ $displaySalePrice }}" data-image="{{ $mainImage }}" data-qty-src="#pQty"
-                    data-variant-source="variantContainer" class="btn btn-primary !py-3 flex-1 sm:flex-none sm:px-8 ...">
+                    data-variant-source="variantContainer" data-variant-id="" data-variant-label="" data-sku=""
+                    class="btn btn-primary !py-3 flex-1 sm:flex-none sm:px-8">
                     Add to Cart
                 </button>
 
                 @if ($productInStock)
                     <a href="{{ url('/checkout') }}" data-add data-buy data-id="{{ $product->id }}"
                         data-name="{{ $productName }}" data-price="{{ $displaySalePrice }}"
-                        data-image="{{ $mainImage }}" data-qty-src="#pQty"
+                        data-image="{{ $mainImage }}" data-qty-src="#pQty" data-variant-source="variantContainer"
+                        data-variant-id="" data-variant-label="" data-sku=""
                         class="btn btn-dark !py-3 flex-1 sm:flex-none sm:px-8">
                         Buy Now
                     </a>
@@ -247,9 +250,7 @@
 
             </div>
 
-            {{-- ====================================================
-                 BENEFITS
-            ===================================================== --}}
+            {{-- BENEFITS --}}
             <div class="mt-7 grid sm:grid-cols-3 gap-3 text-[12px]">
                 <div class="flex items-center gap-2.5 bg-brand-50 rounded-xl p-3">
                     <span class="text-brand-600">
@@ -298,7 +299,7 @@
 
             {{-- SKU / Category / Brand --}}
             <p class="text-xs text-slate-500 mt-5">
-                SKU: <b>{{ $sku }}</b> &nbsp;•&nbsp;
+                SKU: <b id="skuText">{{ $sku }}</b> &nbsp;•&nbsp;
                 Category:
                 @if ($categorySlug)
                     <a href="{{ url('/category/' . $categorySlug) }}" class="text-brand-600">{{ $categoryName }}</a>
@@ -368,6 +369,15 @@
                                 <td class="py-3 font-medium text-slate-800">{{ $brandName }}</td>
                             </tr>
                         @endif
+
+                        {{-- One row per attribute (Color, Age, ...) --}}
+                        @foreach ($productAttributeGroups as $attrName => $values)
+                            <tr class="border-b border-slate-100">
+                                <td class="py-3 pr-6 text-slate-500">{{ $attrName }}</td>
+                                <td class="py-3 font-medium text-slate-800">{{ implode(', ', $values) }}</td>
+                            </tr>
+                        @endforeach
+
                         <tr class="border-b border-slate-100">
                             <td class="py-3 pr-6 text-slate-500">Unit</td>
                             <td class="py-3 font-medium text-slate-800">{{ $unit }}</td>
@@ -416,7 +426,7 @@
                             @else
                                 <span
                                     class="w-11 h-11 rounded-full bg-brand-100 grid place-items-center text-sm font-semibold text-brand-700 shrink-0">
-                                    {{ strtoupper(substr($reviewName, 0, 1)) }}
+                                    {{ strtoupper(mb_substr($reviewName, 0, 1)) }}
                                 </span>
                             @endif
                             <div class="min-w-0">
@@ -470,7 +480,7 @@
                         $relatedDiscount = (int) ($related->discount_percentage ?? 0);
                         $relatedRating = (float) ($related->average_rating ?? 0);
                         $relatedReviewCount = (int) ($related->review_count ?? 0);
-                        $relatedCategory = optional($related->category)->name ?? 'Product';
+                        $relatedCategory = optional($related->category)->category_name ?? 'Product';
                     @endphp
 
                     <article class="card pcard overflow-hidden flex flex-col">
@@ -536,7 +546,6 @@
                                 ({{ $relatedReviewCount }})
                             </div>
 
-                            {{-- Related product Add to Cart — uses $related values --}}
                             <button type="button" data-add data-id="{{ $related->id }}"
                                 data-name="{{ $related->name }}" data-price="{{ $relatedPrice }}"
                                 data-image="{{ $relatedImage }}" class="btn btn-primary btn-sm w-full mt-3">
@@ -563,7 +572,7 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
 
-                /* Product Gallery */
+                /* ---------------- Product Gallery ---------------- */
                 const mainImage = document.querySelector('[data-main] img');
                 document.querySelectorAll('[data-thumb]').forEach(function(thumb) {
                     thumb.addEventListener('click', function() {
@@ -578,7 +587,7 @@
                     });
                 });
 
-                /* Quantity */
+                /* ---------------- Quantity ---------------- */
                 const qtyInput = document.getElementById('pQty');
                 document.querySelectorAll('[data-q]').forEach(function(button) {
                     button.addEventListener('click', function() {
@@ -595,86 +604,135 @@
                     qtyInput.addEventListener('input', function() {
                         let quantity = parseInt(this.value || 1);
                         const max = parseInt(this.max || 999999);
-                        if (quantity < 1) quantity = 1;
+                        if (isNaN(quantity) || quantity < 1) quantity = 1;
                         if (max > 0 && quantity > max) quantity = max;
                         this.value = quantity;
                     });
                 }
 
                 /* ==========================================================
-                   VARIANT SELECTION
+                   VARIANT SELECTION (dynamic attributes)
                    ========================================================== */
-                const variantButtons = document.querySelectorAll('[data-variant]');
+                const VARIANTS = @json($productVariants);
+                const PRODUCT_REGULAR_PRICE = {{ (float) $displayRegularPrice }};
+
                 const priceDisplay = document.querySelector('.product-price-display');
                 const regularPriceDisplay = document.querySelector('.product-regular-price');
                 const saveBadge = document.querySelector('.product-save-badge');
+                const skuText = document.getElementById('skuText');
+                const attrButtons = document.querySelectorAll('[data-attr-btn]');
+                const addButtons = document.querySelectorAll('[data-add][data-id="{{ $product->id }}"]');
 
-                const PRODUCT_REGULAR_PRICE = {{ (float) $displayRegularPrice }};
+                let selected = {};
 
-                function clearVariantActive() {
-                    variantButtons.forEach(function(btn) {
-                        btn.classList.remove('border-brand-600', 'bg-brand-50', 'text-brand-700',
-                            'active-variant');
-                        btn.classList.add('border-slate-200');
+                function matches(variant, sel) {
+                    return Object.keys(sel).every(function(k) {
+                        return variant.attributes[k] === sel[k];
                     });
                 }
 
-                function setVariantActive(btn) {
-                    clearVariantActive();
-                    btn.classList.remove('border-slate-200');
-                    btn.classList.add('border-brand-600', 'bg-brand-50', 'text-brand-700', 'active-variant');
+                function findVariant() {
+                    return VARIANTS.find(function(v) {
+                        return matches(v, selected);
+                    });
                 }
 
                 function updateDisplayedPrice(price) {
-                    const numericPrice = parseFloat(price);
+                    const p = parseFloat(price);
+                    if (isNaN(p)) return;
 
-                    if (isNaN(numericPrice)) return;
+                    if (priceDisplay) priceDisplay.textContent = '৳' + p.toLocaleString('en-US');
 
-                    if (priceDisplay) {
-                        priceDisplay.textContent = '৳' + numericPrice.toLocaleString('en-US');
-                    }
-
-                    if (numericPrice < PRODUCT_REGULAR_PRICE && PRODUCT_REGULAR_PRICE > 0) {
+                    if (p < PRODUCT_REGULAR_PRICE && PRODUCT_REGULAR_PRICE > 0) {
                         if (regularPriceDisplay) {
                             regularPriceDisplay.textContent = '৳' + PRODUCT_REGULAR_PRICE.toLocaleString('en-US');
                             regularPriceDisplay.style.display = '';
                         }
                         if (saveBadge) {
-                            const save = PRODUCT_REGULAR_PRICE - numericPrice;
-                            saveBadge.textContent = 'You save ৳' + save.toLocaleString('en-US');
+                            saveBadge.textContent = 'You save ৳' + (PRODUCT_REGULAR_PRICE - p).toLocaleString('en-US');
                             saveBadge.style.display = '';
                         }
                     } else {
                         if (regularPriceDisplay) regularPriceDisplay.style.display = 'none';
                         if (saveBadge) saveBadge.style.display = 'none';
                     }
+                }
 
-                    document.querySelectorAll('[data-add][data-id="{{ $product->id }}"]').forEach(function(el) {
-                        el.dataset.price = numericPrice;
+                function refreshUI() {
+                    attrButtons.forEach(function(btn) {
+                        const name = btn.dataset.attrName;
+                        const value = btn.dataset.attrValue;
+                        const isActive = selected[name] === value;
+
+                        btn.classList.toggle('active-variant', isActive);
+                        btn.classList.toggle('border-brand-600', isActive);
+                        btn.classList.toggle('bg-brand-50', isActive);
+                        btn.classList.toggle('border-slate-200', !isActive);
+
+                        // Can this value combine with the OTHER selected attributes (in stock)?
+                        const test = Object.assign({}, selected);
+                        test[name] = value;
+                        const possible = VARIANTS.some(function(v) {
+                            return matches(v, test) && v.stock > 0;
+                        });
+
+                        btn.disabled = !possible && !isActive;
+                        btn.classList.toggle('opacity-40', btn.disabled);
+                        btn.classList.toggle('cursor-not-allowed', btn.disabled);
                     });
+
+                    document.querySelectorAll('[data-attr-group]').forEach(function(group) {
+                        const el = group.querySelector('[data-attr-selected]');
+                        if (el) el.textContent = selected[group.dataset.attrGroup] || '';
+                    });
+
+                    const v = findVariant();
+                    if (!v) return;
+
+                    updateDisplayedPrice(v.price);
+                    if (skuText && v.sku) skuText.textContent = v.sku;
+
+                    addButtons.forEach(function(el) {
+                        el.dataset.price = v.price;
+                        el.dataset.variantId = v.id;
+                        el.dataset.variantLabel = v.label;
+                        el.dataset.sku = v.sku;
+                    });
+
+                    if (qtyInput) {
+                        qtyInput.max = Math.max(1, v.stock);
+                        if (v.stock > 0 && parseInt(qtyInput.value) > v.stock) qtyInput.value = v.stock;
+                    }
                 }
 
-                if (variantButtons.length > 0) {
-                    let defaultVariant = Array.from(variantButtons).find(function(btn) {
-                        return btn.dataset.default === 'true';
-                    }) || variantButtons[0];
-
-                    setVariantActive(defaultVariant);
-
-                    const defaultPrice = defaultVariant.dataset.price;
-                    if (defaultPrice) updateDisplayedPrice(defaultPrice);
+                if (VARIANTS.length) {
+                    const first = VARIANTS.find(function(v) {
+                        return v.stock > 0;
+                    }) || VARIANTS[0];
+                    selected = Object.assign({}, first.attributes);
+                    refreshUI();
                 }
 
-                variantButtons.forEach(function(btn) {
-                    btn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        setVariantActive(this);
-                        const variantPrice = this.dataset.price;
-                        if (variantPrice) updateDisplayedPrice(variantPrice);
+                attrButtons.forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        const name = this.dataset.attrName;
+                        const value = this.dataset.attrValue;
+                        selected[name] = value;
+
+                        // Combination missing? switch the other attributes to a valid one.
+                        if (!findVariant()) {
+                            const fallback = VARIANTS.find(function(v) {
+                                return v.attributes[name] === value && v.stock > 0;
+                            }) || VARIANTS.find(function(v) {
+                                return v.attributes[name] === value;
+                            });
+                            if (fallback) selected = Object.assign({}, fallback.attributes);
+                        }
+                        refreshUI();
                     });
                 });
 
-                /* Tabs */
+                /* ---------------- Tabs ---------------- */
                 const tabs = document.querySelectorAll('[data-tab]');
                 const panels = document.querySelectorAll('[data-panel]');
                 tabs.forEach(function(tab) {
@@ -692,7 +750,7 @@
                     });
                 });
 
-                /* Wishlist */
+                /* ---------------- Wishlist ---------------- */
                 document.querySelectorAll('.wish').forEach(function(button) {
                     button.addEventListener('click', function() {
                         this.classList.toggle('text-[#e5383b]');
@@ -748,6 +806,10 @@
                 border-color: #15803d !important;
                 background-color: #f0fdf4 !important;
                 color: #15803d !important;
+            }
+
+            .variant-btn:disabled {
+                text-decoration: line-through;
             }
         </style>
     @endpush
