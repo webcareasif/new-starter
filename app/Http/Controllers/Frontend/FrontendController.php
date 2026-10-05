@@ -41,7 +41,7 @@ class FrontendController extends Controller
 
     public function allProducts()
     {
-        $products = Product::with([
+        return $products = Product::with([
             'price',
             'category',
             'inventory',
@@ -50,6 +50,12 @@ class FrontendController extends Controller
             ->where('is_published', 1)
             ->latest()
             ->paginate(20);
+
+        return  $categories = \App\Models\Admin\Category::withCount('products')
+            // ->where('is_published', 1)
+            ->latest()
+            ->take(8)
+            ->get();
 
         foreach ($products as $product) {
 
@@ -80,7 +86,7 @@ class FrontendController extends Controller
             $product->in_stock = $product->stock > 0;
         }
 
-        return view('frontend.pages.all-products', compact('products')); // productImage
+        return view('frontend.pages.all-products', compact('products', 'categories'));
     }
 
     public function productDetail($slug)
@@ -262,27 +268,78 @@ class FrontendController extends Controller
     public function allCategoryProducts(Request $request)
     {
         $categorySlug = $request->get('category');
-        $category = null;
+        $category     = null;
 
-        $productsQuery = Product::query();
+        $productsQuery = Product::with(['price', 'category', 'inventory', 'brand', 'reviews'])
+            ->where('is_published', 1);
 
-        // Category filter
         if ($categorySlug) {
-
             $category = Category::where('slug', $categorySlug)->firstOrFail();
-
             $productsQuery->where('category_id', $category->id);
         }
 
-        $products = $productsQuery
-            // ->where('published', 1)
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
+        if ($request->filled('max_price')) {
+            $maxPrice = (float) $request->max_price;
+            $productsQuery->whereHas('price', function ($q) use ($maxPrice) {
+                $q->whereRaw('COALESCE(NULLIF(sale_price, 0), regular_price) <= ?', [$maxPrice]);
+            });
+        }
 
-        return view('frontend.pages.all-products', compact(
-            'products',
-            'category'
-        ));
+        if ($request->filled('rating')) {
+            $minRating = (float) $request->rating;
+            $productsQuery->withAvg('reviews', 'rating')
+                ->having('reviews_avg_rating', '>=', $minRating);
+        }
+
+        if ($request->boolean('in_stock')) {
+            $productsQuery->whereHas('inventory', function ($q) {
+                $q->where('stock', '>', 0);
+            });
+        }
+
+        if ($request->boolean('on_sale')) {
+            $productsQuery->whereHas('price', function ($q) {
+                $q->whereNotNull('sale_price')
+                    ->whereColumn('sale_price', '<', 'regular_price');
+            });
+        }
+
+        switch ($request->get('sort')) {
+            case 'price_low':
+                $productsQuery->join('product_prices', 'products.id', '=', 'product_prices.product_id')
+                    ->orderByRaw('COALESCE(NULLIF(product_prices.sale_price, 0), product_prices.regular_price) ASC')
+                    ->select('products.*');
+                break;
+            case 'price_high':
+                $productsQuery->join('product_prices', 'products.id', '=', 'product_prices.product_id')
+                    ->orderByRaw('COALESCE(NULLIF(product_prices.sale_price, 0), product_prices.regular_price) DESC')
+                    ->select('products.*');
+                break;
+            case 'top_rated':
+                $productsQuery->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating');
+                break;
+            case 'newest':
+            default:
+                $productsQuery->latest();
+                break;
+        }
+
+        $products = $productsQuery->paginate(20)->withQueryString();
+
+        $categories = Category::withCount('products')->latest()->take(8)->get();
+
+        // ----- AJAX -----
+        if ($request->ajax() || $request->wantsJson()) {
+            $html = view('frontend.partials.product-results', compact('products'))->render();
+
+            return response()->json([
+                'html'  => $html,
+                'count' => $products->total(),
+                'from'  => $products->firstItem() ?? 0,
+                'to'    => $products->lastItem() ?? 0,
+            ]);
+        }
+
+        return view('frontend.pages.all-products', compact('products', 'category', 'categories'));
     }
 }

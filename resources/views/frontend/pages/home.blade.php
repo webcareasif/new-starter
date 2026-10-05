@@ -11,7 +11,8 @@
                         <rect width="7" height="7" x="14" y="3" rx="1" />
                         <rect width="7" height="7" x="14" y="14" rx="1" />
                         <rect width="7" height="7" x="3" y="14" rx="1" />
-                    </svg> All Categories
+                    </svg>
+                    {{ __('All Categories') }}
                 </div>
                 <ul class="flex-1 flex flex-col justify-evenly py-1">
                     @foreach ($categories as $category)
@@ -22,8 +23,6 @@
                         @endphp
 
                         <li class="relative group">
-
-                            {{-- Main Category --}}
                             <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
                                 class="cat-link flex items-center gap-3 px-5 py-[9px] text-[13.5px] font-medium text-slate-700">
 
@@ -36,164 +35,15 @@
                                         <span class="text-xl">🛍️</span>
                                     @endif
                                 </span>
-
-                                {{-- Category Name --}}
                                 <span class="flex-1">
                                     {{ $category->category_name }}
                                 </span>
-
-                                {{-- Product Count --}}
                                 @if (($category->products_count ?? 0) > 0)
                                     <span class="text-[11px] text-slate-400 mr-1">
                                         {{ $category->products_count }}
                                     </span>
                                 @endif
-
-                                {{-- Arrow — only if there's a mega menu --}}
-                                @if ($hasMegaContent)
-                                    <span class="text-slate-300">
-                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                            aria-hidden="true">
-                                            <path d="m9 18 6-6-6-6" />
-                                        </svg>
-                                    </span>
-                                @endif
                             </a>
-
-                            {{-- Mega Menu — only if there's content --}}
-                            @if ($hasMegaContent)
-                                <div class="cat-fly absolute left-full top-0 bottom-0
-                       w-[min(620px,50vw)]
-                       card !rounded-2xl p-7 z-30 overflow-hidden"
-                                    style="background:linear-gradient(135deg,#fff 55%,#e3f1e5)">
-
-                                    {{-- Header --}}
-                                    <div class="flex items-center gap-3 mb-5">
-                                        <span
-                                            class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center overflow-hidden">
-                                            @if ($category->category_image)
-                                                <img src="{{ uploaded_asset($category->category_image) }}"
-                                                    alt="{{ $category->category_name }}" class="w-full h-full object-cover">
-                                            @else
-                                                <span class="text-2xl">🛍️</span>
-                                            @endif
-                                        </span>
-
-                                        <div>
-                                            <h3 class="text-lg font-bold text-slate-900">
-                                                {{ $category->category_name }}
-                                            </h3>
-                                            <p class="text-xs text-slate-400">
-                                                {{ $category->products_count ?? 0 }} Products
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-3 gap-6">
-                                        <div>
-                                            <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">
-                                                {{ $hasSubcategories ? 'Subcategories' : $category->category_name }}
-                                            </h4>
-
-                                            <ul class="space-y-1.5">
-                                                @if ($hasSubcategories)
-                                                    @foreach ($category->subcategories->take(5) as $sub)
-                                                        <li>
-                                                            <a href="{{ route('frontend.all-products', ['category' => $category->slug, 'subcategory' => $sub->slug ?? '']) }}"
-                                                                class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                                {{ $sub->subcategory_name ?? ($sub->name ?? 'Subcategory') }}
-                                                            </a>
-                                                        </li>
-                                                    @endforeach
-                                                @else
-                                                    <li>
-                                                        <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                            class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                            All Products
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                            class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                            New Arrivals
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                            class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                            Best Selling
-                                                        </a>
-                                                    </li>
-                                                @endif
-                                            </ul>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">
-                                                Explore
-                                            </h4>
-                                            <ul class="space-y-1.5">
-                                                <li>
-                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                        Featured
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                        Trending
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                        Offers
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-[13px] font-semibold text-slate-900 mb-2.5">
-                                                Quick Links
-                                            </h4>
-                                            <ul class="space-y-1.5">
-                                                <li>
-                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                        Shop Now
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                        Popular Products
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                                        class="text-[13px] text-slate-600 hover:text-brand-600">
-                                                        View More
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                                        class="btn btn-primary btn-sm absolute left-7 bottom-6">
-                                        Shop {{ $category->category_name }}
-                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                                            aria-hidden="true">
-                                            <path d="M5 12h14" />
-                                            <path d="m12 5 7 7-7 7" />
-                                        </svg>
-                                    </a>
-                                    <span class="absolute right-5 bottom-3 text-[6rem] leading-none opacity-10 select-none"
-                                        aria-hidden="true">
-                                        🛍️
-                                    </span>
-                                </div>
-                            @endif
                         </li>
                     @endforeach
                 </ul>
@@ -315,9 +165,9 @@
                                             </svg>
                                         </button>
                                         <button class="hero-arrow" data-hero-next aria-label="Next slide">
-                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                                stroke-linejoin="round" aria-hidden="true">
+                                            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                                aria-hidden="true">
                                                 <path d="m9 18 6-6-6-6" />
                                             </svg>
                                         </button>
@@ -945,27 +795,27 @@
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
-                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
-                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
-                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
-                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                                         fill="currentColor" />
