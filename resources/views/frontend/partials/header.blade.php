@@ -18,18 +18,14 @@
                     class="block text-[1.15rem] sm:text-[1.3rem] font-bold text-brand-900">NexioMart</span><span
                     class="hidden min-[420px]:block text-[10px] text-slate-500 mt-1">Shop Smart, Live
                     Better</span></span></a>
-        <form action="shop.html" class="hidden md:flex flex-1 max-w-xl mx-auto"><label class="sr-only"
-                for="q">Search
-                products</label>
-            <input id="q" type="search" placeholder="Search for products..."
-                class="field !rounded-r-none !py-2.5 !text-[13px] bg-slate-50">
-            <button class="bg-brand-600 hover:bg-brand-700 text-white px-4 rounded-r-[10px]" aria-label="Search"><svg
-                    class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                </svg></button>
-        </form>
+
+        {{-- DESKTOP SEARCH (autocomplete) --}}
+        @include('frontend.partials.search-box', [
+            'inputId' => 'q',
+            'formClass' => 'hidden md:flex flex-1 max-w-xl mx-auto',
+            'inputClass' => '!py-2.5 !text-[13px] bg-slate-50',
+        ])
+
         <div class="ml-auto flex items-center sm:gap-3 text-[11px] text-slate-600">
             <a href="login.html" class="flex flex-col items-center px-1.5 sm:px-2 hover:text-brand-600"><span><svg
                         class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -56,16 +52,16 @@
                     class="absolute -top-1 right-0 bg-brand-600 text-white text-[9px] w-4 h-4 rounded-full grid place-items-center">0</b></a>
         </div>
     </div>
+
+    {{-- MOBILE SEARCH (autocomplete) --}}
     <div class="md:hidden px-4 pb-3">
-        <form action="shop.html" class="flex"><input type="search" placeholder="Search for products..."
-                class="field !rounded-r-none !py-2 !text-[13px]" aria-label="Search products"><button
-                class="bg-brand-600 text-white px-4 rounded-r-[10px]" aria-label="Search"><svg class="w-4 h-4"
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                </svg></button></form>
+        @include('frontend.partials.search-box', [
+            'inputId' => 'q-mobile',
+            'formClass' => 'flex',
+            'inputClass' => '!py-2 !text-[13px]',
+        ])
     </div>
+
     <div class="hidden lg:block border-t border-slate-100">
         <div class="container-fluid flex items-center gap-8">
             <div class="dd-wrap relative"><button
@@ -124,3 +120,169 @@
         </div>
     </div>
 </header>
+
+{{-- ============================================================
+     SEARCH AUTOCOMPLETE SCRIPT
+============================================================ --}}
+<script>
+    (function() {
+        const ENDPOINT = @json(route('frontend.search-suggestions'));
+        const MIN_CHARS = 2;
+        const DELAY = 250;
+
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        } [c]));
+
+        const money = n => '৳' + Number(n).toLocaleString('en-US');
+
+        function highlight(text, q) {
+            const i = text.toLowerCase().indexOf(q.toLowerCase());
+            if (i < 0) return esc(text);
+            return esc(text.slice(0, i)) +
+                '<mark class="bg-transparent text-brand-700 font-semibold">' +
+                esc(text.slice(i, i + q.length)) + '</mark>' +
+                esc(text.slice(i + q.length));
+        }
+
+        function init(form) {
+            const input = form.querySelector('[data-search-input]');
+            const box = form.querySelector('[data-search-dropdown]');
+            let timer = null,
+                controller = null,
+                items = [],
+                active = -1;
+
+            const open = () => {
+                box.classList.remove('hidden');
+                input.setAttribute('aria-expanded', 'true');
+            };
+            const close = () => {
+                box.classList.add('hidden');
+                input.setAttribute('aria-expanded', 'false');
+                active = -1;
+            };
+
+            function setActive(i) {
+                const links = box.querySelectorAll('[data-item]');
+                links.forEach(l => l.classList.remove('bg-brand-50'));
+                active = i;
+                if (i >= 0 && links[i]) {
+                    links[i].classList.add('bg-brand-50');
+                    links[i].scrollIntoView({
+                        block: 'nearest'
+                    });
+                }
+            }
+
+            function message(text) {
+                box.innerHTML = '<div class="px-4 py-5 text-sm text-slate-500 text-center">' + esc(text) + '</div>';
+                open();
+            }
+
+            function render(data, q) {
+                items = data.items || [];
+                if (!items.length) return message('No products found for "' + q + '"');
+
+                const rows = items.map(p => {
+                    const img = p.image ?
+                        '<img src="' + esc(p.image) +
+                        '" alt="" width="48" height="48" loading="lazy" class="w-12 h-12 rounded-lg object-cover bg-slate-100 shrink-0">' :
+                        '<span class="w-12 h-12 rounded-lg bg-slate-100 shrink-0"></span>';
+
+                    const old = p.regular ?
+                        '<span class="text-xs text-slate-400 line-through ml-2">' + money(p.regular) +
+                        '</span>' : '';
+
+                    const cat = p.category ?
+                        '<p class="text-[11px] text-slate-400 truncate">' + esc(p.category) + '</p>' : '';
+
+                    return '<a data-item href="' + esc(p.url) +
+                        '" role="option" class="flex items-center gap-3 px-3 py-2.5 hover:bg-brand-50 transition">' +
+                        img +
+                        '<span class="min-w-0 flex-1">' +
+                        '<p class="text-[13px] text-slate-800 leading-snug line-clamp-2">' + highlight(p
+                            .name,
+                            q) + '</p>' +
+                        cat +
+                        '</span>' +
+                        '<span class="text-sm font-bold text-brand-700 whitespace-nowrap">' + money(p
+                            .price) +
+                        old + '</span>' +
+                        '</a>';
+                }).join('');
+
+                const allUrl = form.action + '?q=' + encodeURIComponent(q);
+                const footer = '<a href="' + esc(allUrl) +
+                    '" class="block text-center text-[13px] font-medium text-brand-700 bg-slate-50 hover:bg-brand-50 py-2.5 border-t border-slate-100">' +
+                    'View all ' + data.total + ' result' + (data.total === 1 ? '' : 's') + '</a>';
+
+                box.innerHTML = rows + footer;
+                active = -1;
+                open();
+            }
+
+            async function search(q) {
+                if (controller) controller.abort();
+                controller = new AbortController();
+                message('Searching...');
+                try {
+                    const res = await fetch(ENDPOINT + '?q=' + encodeURIComponent(q), {
+                        signal: controller.signal,
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    if (!res.ok) throw new Error('bad response');
+                    render(await res.json(), q);
+                } catch (e) {
+                    if (e.name !== 'AbortError') message('Something went wrong. Please try again.');
+                }
+            }
+
+            input.addEventListener('input', function() {
+                const q = this.value.trim();
+                clearTimeout(timer);
+                if (q.length < MIN_CHARS) {
+                    if (controller) controller.abort();
+                    items = [];
+                    close();
+                    return;
+                }
+                timer = setTimeout(() => search(q), DELAY);
+            });
+
+            input.addEventListener('focus', function() {
+                if (items.length && this.value.trim().length >= MIN_CHARS) open();
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (box.classList.contains('hidden')) return;
+                const count = items.length;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setActive(count ? (active + 1) % count : -1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setActive(count ? (active - 1 + count) % count : -1);
+                } else if (e.key === 'Enter' && active >= 0 && items[active]) {
+                    e.preventDefault();
+                    window.location.href = items[active].url;
+                } else if (e.key === 'Escape') {
+                    close();
+                }
+            });
+
+            document.addEventListener('click', e => {
+                if (!form.contains(e.target)) close();
+            });
+        }
+
+        document.querySelectorAll('[data-search-form]').forEach(init);
+    })();
+</script>

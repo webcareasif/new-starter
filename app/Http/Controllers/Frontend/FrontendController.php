@@ -89,182 +89,6 @@ class FrontendController extends Controller
         return view('frontend.pages.all-products', compact('products', 'categories'));
     }
 
-    public function productDetail1111($slug)
-    {
-        $product = Product::with([
-            'price',
-            'category',
-            'subcategory',
-            'brand',
-            'inventory',
-            'shipping',
-            'seo',
-            'taxes',
-            'variants.attributeRel',
-            'reviews.user',
-            'reviews.dummyReview',
-        ])
-            ->where('slug', $slug)
-            ->where('is_published', 1)
-            ->firstOrFail();
-
-        $photoIds = [];
-
-        if (!empty($product->photos)) {
-            $photoIds = is_array($product->photos)
-                ? $product->photos
-                : json_decode($product->photos, true);
-
-            $photoIds = is_array($photoIds) ? $photoIds : [];
-        }
-
-        $thumbnail = $product->thumbnail
-            ? uploaded_asset($product->thumbnail)
-            : null;
-
-        $galleryImages = [];
-
-        foreach ($photoIds as $photoId) {
-            if (!$photoId) {
-                continue;
-            }
-
-            if ((string) $photoId === (string) $product->thumbnail) {
-                continue;
-            }
-
-            $image = uploaded_asset($photoId);
-
-            if ($image) {
-                $galleryImages[] = $image;
-            }
-        }
-
-        $regularPrice = (float) ($product->price->regular_price ?? 0);
-
-        $salePrice = $product->price->sale_price !== null
-            ? (float) $product->price->sale_price
-            : null;
-
-        $currentPrice = ($salePrice !== null && $salePrice < $regularPrice)
-            ? $salePrice
-            : $regularPrice;
-
-        $discountPercentage = 0;
-
-        if ($regularPrice > 0 && $currentPrice < $regularPrice) {
-            $discountPercentage = round(
-                (($regularPrice - $currentPrice) / $regularPrice) * 100
-            );
-        }
-
-        $savingAmount = max(0, $regularPrice - $currentPrice);
-
-        $stock = (int) ($product->inventory->stock ?? 0);
-
-        $inStock = $stock > 0;
-
-        $reviews = $product->reviews ?? collect();
-
-        $reviewCount = $reviews->count();
-
-        $averageRating = $reviewCount > 0
-            ? round((float) $reviews->avg('rating'), 1)
-            : 0;
-
-        $variants = $product->variants->map(function ($variant) {
-            $label = '';
-
-            if (!empty($variant->attribute_value)) {
-                $decoded = json_decode($variant->attribute_value, true);
-
-                if (is_array($decoded)) {
-                    $label = implode(' / ', array_values($decoded));
-                } else {
-                    $label = (string) $variant->attribute_value;
-                }
-            }
-
-            if (empty($label)) {
-                $label = optional($variant->attributeRel)->name ?? 'Option';
-            }
-
-            return [
-                'id'    => $variant->id,
-                'label' => $label,
-                'price' => (float) $variant->price,
-                'stock' => (int) $variant->quantity,
-                'sku'   => $variant->sku,
-            ];
-        });
-
-        $relatedProducts = Product::with([
-            'price',
-            'category',
-            'inventory',
-            'brand',
-            'reviews',
-        ])
-            ->where('is_published', 1)
-            ->where('id', '!=', $product->id)
-            ->where('category_id', $product->category_id)
-            ->latest()
-            ->take(8)
-            ->get();
-
-        foreach ($relatedProducts as $relatedProduct) {
-            $relatedRegular = (float) ($relatedProduct->price->regular_price ?? 0);
-
-            $relatedSale = $relatedProduct->price->sale_price !== null
-                ? (float) $relatedProduct->price->sale_price
-                : null;
-
-            $relatedCurrent = ($relatedSale !== null && $relatedSale < $relatedRegular)
-                ? $relatedSale
-                : $relatedRegular;
-
-            $relatedProduct->display_price = $relatedCurrent;
-            $relatedProduct->display_regular_price = $relatedRegular;
-
-            $relatedProduct->discount_percentage = (
-                $relatedRegular > 0 && $relatedCurrent < $relatedRegular
-            )
-                ? round((($relatedRegular - $relatedCurrent) / $relatedRegular) * 100)
-                : 0;
-
-            $relatedProduct->average_rating = $relatedProduct->reviews->count()
-                ? round((float) $relatedProduct->reviews->avg('rating'), 1)
-                : 0;
-
-            $relatedProduct->review_count = $relatedProduct->reviews->count();
-
-            $relatedProduct->thumbnail_url = $relatedProduct->thumbnail
-                ? uploaded_asset($relatedProduct->thumbnail)
-                : null;
-        }
-
-        return view(
-            'frontend.pages.product-detail',
-            compact(
-                'product',
-                'thumbnail',
-                'galleryImages',
-                'regularPrice',
-                'salePrice',
-                'currentPrice',
-                'discountPercentage',
-                'savingAmount',
-                'stock',
-                'inStock',
-                'reviews',
-                'reviewCount',
-                'averageRating',
-                'variants',
-                'relatedProducts'
-            )
-        );
-    }
-
     public function productDetail($slug)
     {
         $product = Product::with([
@@ -550,5 +374,49 @@ class FrontendController extends Controller
         }
 
         return view('frontend.pages.all-products', compact('products', 'category', 'categories'));
+    }
+
+
+    public function searchSuggestions(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['items' => [], 'total' => 0]);
+        }
+
+        // escape LIKE wildcards typed by the user
+        $like = '%' . addcslashes($q, '%_\\') . '%';
+
+        $base = Product::where('is_published', 1)->where(function ($w) use ($like) {
+            $w->where('products.name', 'like', $like)
+                ->orWhereHas('variants', fn($v) => $v->where('sku', 'like', $like))
+                ->orWhereHas('inventory', fn($i) => $i->where('sku', 'like', $like));
+        });
+
+        $total = (clone $base)->count();
+
+        $items = $base->with(['price', 'category'])
+            // names that START with the query come first
+            ->orderByRaw('CASE WHEN products.name LIKE ? THEN 0 ELSE 1 END', [addcslashes($q, '%_\\') . '%'])
+            ->limit(6)
+            ->get()
+            ->map(function ($p) {
+                $regular = (float) optional($p->price)->regular_price;
+                $sale    = optional($p->price)->sale_price !== null ? (float) $p->price->sale_price : null;
+                $current = ($sale !== null && $sale > 0 && $sale < $regular) ? $sale : $regular;
+
+                return [
+                    'id'       => $p->id,
+                    'name'     => $p->name,
+                    'url'      => route('frontend.product-details', $p->slug),
+                    'image'    => $p->thumbnail ? uploaded_asset($p->thumbnail) : null,
+                    'category' => optional($p->category)->category_name,
+                    'price'    => $current,
+                    'regular'  => $regular > $current ? $regular : null,
+                ];
+            });
+
+        return response()->json(['items' => $items, 'total' => $total]);
     }
 }
