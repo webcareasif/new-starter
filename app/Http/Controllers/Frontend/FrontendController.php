@@ -39,7 +39,7 @@ class FrontendController extends Controller
         return view('frontend.pages.home', compact('categories', 'sliders'));
     }
 
-    public function allProducts()
+    public function allProducts111()
     {
         $products = Product::with([
             'price',
@@ -385,8 +385,8 @@ class FrontendController extends Controller
             return response()->json(['items' => [], 'total' => 0]);
         }
 
-        // escape LIKE wildcards typed by the user
-        $like = '%' . addcslashes($q, '%_\\') . '%';
+        $escaped = addcslashes($q, '%_\\');
+        $like    = '%' . $escaped . '%';
 
         $base = Product::where('is_published', 1)->where(function ($w) use ($like) {
             $w->where('products.name', 'like', $like)
@@ -396,9 +396,8 @@ class FrontendController extends Controller
 
         $total = (clone $base)->count();
 
-        $items = $base->with(['price', 'category'])
-            // names that START with the query come first
-            ->orderByRaw('CASE WHEN products.name LIKE ? THEN 0 ELSE 1 END', [addcslashes($q, '%_\\') . '%'])
+        $items = $base->with(['price', 'category', 'inventory', 'variants'])
+            ->orderByRaw('CASE WHEN products.name LIKE ? THEN 0 ELSE 1 END', [$escaped . '%'])
             ->limit(6)
             ->get()
             ->map(function ($p) {
@@ -406,14 +405,21 @@ class FrontendController extends Controller
                 $sale    = optional($p->price)->sale_price !== null ? (float) $p->price->sale_price : null;
                 $current = ($sale !== null && $sale > 0 && $sale < $regular) ? $sale : $regular;
 
+                $hasVariants = $p->variants->count() > 0;
+                $stock = $hasVariants
+                    ? (int) $p->variants->sum('quantity')
+                    : (int) optional($p->inventory)->stock;
+
                 return [
-                    'id'       => $p->id,
-                    'name'     => $p->name,
-                    'url'      => route('frontend.product-details', $p->slug),
-                    'image'    => $p->thumbnail ? uploaded_asset($p->thumbnail) : null,
-                    'category' => optional($p->category)->category_name,
-                    'price'    => $current,
-                    'regular'  => $regular > $current ? $regular : null,
+                    'id'           => $p->id,
+                    'name'         => $p->name,
+                    'url'          => route('frontend.product-details', $p->slug),
+                    'image'        => $p->thumbnail ? uploaded_asset($p->thumbnail) : null,
+                    'category'     => optional($p->category)->category_name,
+                    'price'        => $current,
+                    'regular'      => $regular > $current ? $regular : null,
+                    'has_variants' => $hasVariants,
+                    'in_stock'     => $stock > 0,
                 ];
             });
 

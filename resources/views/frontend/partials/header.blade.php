@@ -122,7 +122,7 @@
 </header>
 
 {{-- ============================================================
-     SEARCH AUTOCOMPLETE SCRIPT
+     SEARCH AUTOCOMPLETE SCRIPT (with Add to Cart)
 ============================================================ --}}
 <script>
     (function() {
@@ -169,10 +169,10 @@
 
             function setActive(i) {
                 const links = box.querySelectorAll('[data-item]');
-                links.forEach(l => l.classList.remove('bg-brand-50'));
+                links.forEach(l => l.parentElement.classList.remove('bg-brand-50'));
                 active = i;
                 if (i >= 0 && links[i]) {
-                    links[i].classList.add('bg-brand-50');
+                    links[i].parentElement.classList.add('bg-brand-50');
                     links[i].scrollIntoView({
                         block: 'nearest'
                     });
@@ -195,25 +195,43 @@
                         '<span class="w-12 h-12 rounded-lg bg-slate-100 shrink-0"></span>';
 
                     const old = p.regular ?
-                        '<span class="text-xs text-slate-400 line-through ml-2">' + money(p.regular) +
+                        '<span class="text-xs text-slate-400 line-through ml-1.5">' + money(p.regular) +
                         '</span>' : '';
 
                     const cat = p.category ?
                         '<p class="text-[11px] text-slate-400 truncate">' + esc(p.category) + '</p>' : '';
 
-                    return '<a data-item href="' + esc(p.url) +
-                        '" role="option" class="flex items-center gap-3 px-3 py-2.5 hover:bg-brand-50 transition">' +
+                    let action;
+                    if (!p.in_stock) {
+                        action =
+                            '<span class="text-[11px] text-red-500 font-medium whitespace-nowrap">Out of stock</span>';
+                    } else if (p.has_variants) {
+                        action = '<a href="' + esc(p.url) +
+                            '" class="px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-700 hover:border-brand-600 hover:text-brand-700 whitespace-nowrap">Options</a>';
+                    } else {
+                        action = '<button type="button" data-add data-search-add' +
+                            ' data-id="' + esc(p.id) + '"' +
+                            ' data-name="' + esc(p.name) + '"' +
+                            ' data-price="' + esc(p.price) + '"' +
+                            ' data-image="' + esc(p.image || '') + '"' +
+                            ' class="btn btn-primary btn-sm whitespace-nowrap">Add</button>';
+                    }
+
+                    return '<div class="flex items-center gap-2 pr-3 hover:bg-brand-50 transition" role="option">' +
+                        '<a data-item href="' + esc(p.url) +
+                        '" class="flex items-center gap-3 pl-3 py-2.5 flex-1 min-w-0">' +
                         img +
                         '<span class="min-w-0 flex-1">' +
                         '<p class="text-[13px] text-slate-800 leading-snug line-clamp-2">' + highlight(p
                             .name,
                             q) + '</p>' +
                         cat +
+                        '<p class="text-sm font-bold text-brand-700 mt-0.5">' + money(p.price) + old +
+                        '</p>' +
                         '</span>' +
-                        '<span class="text-sm font-bold text-brand-700 whitespace-nowrap">' + money(p
-                            .price) +
-                        old + '</span>' +
-                        '</a>';
+                        '</a>' +
+                        action +
+                        '</div>';
                 }).join('');
 
                 const allUrl = form.action + '?q=' + encodeURIComponent(q);
@@ -276,6 +294,17 @@
                 } else if (e.key === 'Escape') {
                     close();
                 }
+            });
+
+            // Visual feedback after clicking "Add" in the dropdown
+            box.addEventListener('click', function(e) {
+                const btn = e.target.closest('[data-search-add]');
+                if (!btn) return;
+                const label = btn.textContent;
+                btn.textContent = 'Added ✓';
+                setTimeout(() => {
+                    btn.textContent = label;
+                }, 1200);
             });
 
             document.addEventListener('click', e => {
