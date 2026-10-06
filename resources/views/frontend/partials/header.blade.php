@@ -105,7 +105,10 @@
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Flash Sale</a>
                 <a href="shop.html"
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Offers</a>
-                <a href="blog.html" class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Blog</a>
+                <a href="{{ route('frontend.blogs') }}"
+                    class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.blogs') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
+                    Blogs
+                </a>
 
                 <a href="{{ route('frontend.contact-us') }}"
                     class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.contact-us') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">

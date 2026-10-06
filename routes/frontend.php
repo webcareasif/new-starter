@@ -9,6 +9,8 @@ Route::get('/product/{slug}', [FrontendController::class, 'productDetail'])->nam
 
 Route::get('/contact-us', [FrontendController::class, 'contactUs'])->name('frontend.contact-us');
 Route::get('/about-us', [FrontendController::class, 'aboutUs'])->name('frontend.about-us');
+Route::get('/blogs', [FrontendController::class, 'blogs'])->name('frontend.blogs');
+Route::get('/blog/{slug}', [FrontendController::class, 'blogDetail'])->name('blog.detail');
 
 
 

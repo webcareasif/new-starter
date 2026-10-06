@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Blog;
 use App\Models\Admin\Campaign;
 use App\Models\Admin\Category;
 use App\Models\Admin\Product;
@@ -13,16 +14,21 @@ use Illuminate\Http\Request;
 
 class FrontendController extends Controller
 {
+
+
     public function home()
     {
-        $categories = \App\Models\Admin\Category::withCount('products')
-            // ->where('is_published', 1)
+        // relations needed by the product card partial
+        $with = ['price', 'category', 'inventory', 'reviews', 'variants.attributeRel'];
+
+        /* ---------------- Categories (sidebar + mobile circles + tabs) ---------------- */
+        $categories = Category::withCount('products')
             ->latest()
             ->take(8)
             ->get();
 
+        /* ---------------- Sliders ---------------- */
         $sliders = \App\Models\Admin\Slider::orderBy('order')
-            // ->where('status', 1)   // if you have a status column
             ->get()
             ->map(function ($slider) {
                 return [
@@ -39,19 +45,77 @@ class FrontendController extends Controller
             })
             ->toArray();
 
-
-        $electronicsCategory = Category::where('slug', 'kids-fashion')->first();
-
-        $categoryProducts = $electronicsCategory
-            ? Product::with(['price', 'category', 'inventory', 'reviews', 'variants.attributeRel'])
+        /* ---------------- Flash sale: products with a real discount ---------------- */
+        $flashProducts = Product::with($with)
             ->where('is_published', 1)
-            ->where('category_id', $electronicsCategory->id)
+            // ->whereHas('price', function ($q) {
+            //     $q->whereNotNull('sale_price')
+            //         ->where('sale_price', '>', 0)
+            //         ->whereColumn('sale_price', '<', 'regular_price');
+            // })
             ->latest()
-            ->take(8)
-            ->get()
-            : collect();
+            ->take(5)
+            ->get();
 
-        return view('frontend.pages.home', compact('categories', 'sliders', 'categoryProducts', 'electronicsCategory'));
+        /* ---------------- Best selling (All tab) ---------------- */
+        $bestSelling = Product::with($with)
+            ->where('is_published', 1)
+            ->orderByDesc('num_of_sale')
+            ->take(10)
+            ->get();
+
+        /* ---------------- Best selling (one tab per category) ---------------- */
+        $bestTabs = $categories->take(5)->map(function ($cat) use ($with) {
+            return [
+                'slug'     => $cat->slug,
+                'name'     => $cat->category_name,
+                'products' => Product::with($with)
+                    ->where('is_published', 1)
+                    ->where('category_id', $cat->id)
+                    ->orderByDesc('num_of_sale')
+                    ->take(5)
+                    ->get(),
+            ];
+        })->filter(fn($tab) => $tab['products']->count())->values();
+
+        /* ---------------- "Popular in {category}" sections ---------------- */
+        $categorySections = $categories
+            ->where('products_count', '>', 0)
+            ->take(3)
+            ->map(function ($cat) use ($with) {
+                return [
+                    'category' => $cat,
+                    'products' => Product::with($with)
+                        ->where('is_published', 1)
+                        ->where('category_id', $cat->id)
+                        ->latest()
+                        ->take(5)
+                        ->get(),
+                ];
+            })->values();
+
+        /* ---------------- Customer reviews (from real product reviews) ---------------- */
+        $reviewModel  = (new Product)->reviews()->getRelated();
+        $testimonials = $reviewModel->newQuery()
+            ->with('user')
+            ->where('status', 1)
+            ->where('rating', '>=', 4)
+            ->whereNotNull('comment')
+            ->whereRaw('CHAR_LENGTH(comment) >= 20')
+            ->orderByDesc('rating')
+            ->latest()
+            ->take(3)
+            ->get();
+
+        return view('frontend.pages.home', compact(
+            'categories',
+            'sliders',
+            'flashProducts',
+            'bestSelling',
+            'bestTabs',
+            'categorySections',
+            'testimonials'
+        ));
     }
 
     public function productDetail($slug)
@@ -421,5 +485,50 @@ class FrontendController extends Controller
     public function aboutUs()
     {
         return view('frontend.pages.about-us');
+    }
+    public function blogs(Request $request)
+    {
+        $search = trim((string) $request->get('q', ''));
+        $tag    = trim((string) $request->get('tag', ''));
+
+        $query = Blog::query();
+
+        /* ---------------- Search ---------------- */
+        if ($search !== '') {
+            $like = '%' . addcslashes($search, '%_\\') . '%';
+
+            $query->where(function ($w) use ($like) {
+                $w->where('blog_title', 'like', $like)
+                    ->orWhere('short_description', 'like', $like);
+            });
+        }
+
+        /* ---------------- Tag filter (exact tag, tags are comma separated) ---------------- */
+        if ($tag !== '') {
+            $query->whereRaw('FIND_IN_SET(?, REPLACE(tags, " ", ""))', [$tag]);
+        }
+
+        $blogs = $query->latest()->paginate(9)->withQueryString();
+
+        // First post becomes the big featured card, only on page 1 without filters
+        $showFeatured = $blogs->currentPage() === 1 && $search === '' && $tag === '';
+        $featured     = $showFeatured ? $blogs->first() : null;
+        $posts        = $featured
+            ? $blogs->getCollection()->slice(1)
+            : $blogs->getCollection();
+
+        return view('frontend.pages.blog', compact('blogs', 'featured', 'posts', 'search', 'tag'));
+    }
+
+    public function blogDetail($slug)
+    {
+        $blog = Blog::where('slug', $slug)->firstOrFail();
+
+        $relatedBlogs = Blog::where('id', '!=', $blog->id)
+            ->latest()
+            ->take(3)
+            ->get();
+
+        return view('frontend.pages.blog-detail', compact('blog', 'relatedBlogs'));
     }
 }
