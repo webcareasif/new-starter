@@ -1,5 +1,3 @@
-{{-- resources/views/frontend/partials/product-results.blade.php --}}
-
 <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
     <p class="text-sm text-slate-500">
         Showing <b class="text-slate-800">{{ $products->firstItem() ?? 0 }}–{{ $products->lastItem() ?? 0 }}</b>
@@ -96,6 +94,11 @@
                 /* ---------- Stock ---------- */
                 $productStock = (int) ($product->inventory->stock ?? 0);
                 $productInStock = $hasVariants ? collect($variantsJson)->sum('stock') > 0 : $productStock > 0;
+
+                /* ---------- Reviews ---------- */
+                $reviewCount = $product->reviews ? $product->reviews->count() : 0;
+                $averageRating = $reviewCount > 0 ? round((float) $product->reviews->avg('rating'), 1) : 0;
+
             @endphp
 
             <article class="card pcard overflow-hidden flex flex-col">
@@ -177,15 +180,17 @@
                     <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
                         <span class="inline-flex text-star">
                             @for ($i = 1; $i <= 5; $i++)
-                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"
-                                    stroke-width="1.8">
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                    fill="{{ $i <= round($averageRating) ? 'currentColor' : 'none' }}"
+                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                     <polygon
                                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                 </svg>
                             @endfor
                         </span>
-                        <b class="text-slate-700">5.0</b>
-                        <span>(0)</span>
+                        <b class="text-slate-700">{{ number_format($averageRating, 1) }}</b>
+                        <span>({{ $reviewCount }})</span>
                     </div>
 
                     {{-- ================= Add to Cart / Select Options ================= --}}

@@ -106,17 +106,27 @@
                 <a href="shop.html"
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Offers</a>
                 <a href="blog.html" class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Blog</a>
+
+                <a href="{{ route('frontend.contact-us') }}"
+                    class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.contact-us') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
+                    Contact Us
+                </a>
+
+
+
                 <a href="track-order.html"
-                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Track Order</a>
+                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Track Order
+                </a>
             </nav>
 
             <a href="tel:01316690209" class="ml-auto text-[12px] flex items-center gap-2 text-slate-600"><span
-                    class="text-brand-600"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                        aria-hidden="true">
+                    class="text-brand-600">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path
                             d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                    </svg></span>Need Help? <b class="text-brand-700">01316 690 209</b></a>
+                    </svg></span>Need Help? <b class="text-brand-700">01316 690 209</b>
+            </a>
         </div>
     </div>
 </header>
@@ -207,14 +217,14 @@
                             '<span class="text-[11px] text-red-500 font-medium whitespace-nowrap">Out of stock</span>';
                     } else if (p.has_variants) {
                         action = '<a href="' + esc(p.url) +
-                            '" class="px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-700 hover:border-brand-600 hover:text-brand-700 whitespace-nowrap">Options</a>';
+                            '" class="px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-700 hover:border-brand-600 hover:text-brand-700 whitespace-nowrap">Select Options</a>';
                     } else {
                         action = '<button type="button" data-add data-search-add' +
                             ' data-id="' + esc(p.id) + '"' +
                             ' data-name="' + esc(p.name) + '"' +
                             ' data-price="' + esc(p.price) + '"' +
                             ' data-image="' + esc(p.image || '') + '"' +
-                            ' class="btn btn-primary btn-sm whitespace-nowrap">Add</button>';
+                            ' class="btn btn-primary btn-sm whitespace-nowrap">Add to Cart</button>';
                     }
 
                     return '<div class="flex items-center gap-2 pr-3 hover:bg-brand-50 transition" role="option">' +

@@ -51,12 +51,12 @@
         <div>
             <h4 class="font-semibold text-slate-900 mb-4">Customer Service</h4>
             <ul class="space-y-2.5 text-[13px]">
-                <li><a href="faq.html" class="hover:text-brand-600">Help Center</a></li>
+                <li><a href="{{ route('frontend.about-us') }}" class="hover:text-brand-600">About Us</a></li>
                 <li><a href="terms.html" class="hover:text-brand-600">Return & Refund</a></li>
                 <li><a href="terms.html" class="hover:text-brand-600">Shipping Policy</a></li>
                 <li><a href="terms.html" class="hover:text-brand-600">Terms & Conditions</a></li>
                 <li><a href="terms.html" class="hover:text-brand-600">Privacy Policy</a></li>
-                <li><a href="contact.html" class="hover:text-brand-600">Contact Us</a></li>
+                <li><a href="{{ route('frontend.contact-us') }}" class="hover:text-brand-600">Contact Us</a></li>
             </ul>
         </div>
         <div class="col-span-2 sm:col-span-1">

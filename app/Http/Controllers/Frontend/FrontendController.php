@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin\Campaign;
 use App\Models\Admin\Category;
 use App\Models\Admin\Product;
+use App\Models\Admin\Slider;
 use Illuminate\Support\Str;
 use Auth;
 use Illuminate\Http\Request;
@@ -36,57 +38,20 @@ class FrontendController extends Controller
                 ];
             })
             ->toArray();
-        return view('frontend.pages.home', compact('categories', 'sliders'));
-    }
 
-    public function allProducts111()
-    {
-        $products = Product::with([
-            'price',
-            'category',
-            'inventory',
-            'brand',
-        ])
+
+        $electronicsCategory = Category::where('slug', 'kids-fashion')->first();
+
+        $categoryProducts = $electronicsCategory
+            ? Product::with(['price', 'category', 'inventory', 'reviews', 'variants.attributeRel'])
             ->where('is_published', 1)
-            ->latest()
-            ->paginate(20);
-
-        return  $categories = \App\Models\Admin\Category::withCount('products')
-            // ->where('is_published', 1)
+            ->where('category_id', $electronicsCategory->id)
             ->latest()
             ->take(8)
-            ->get();
+            ->get()
+            : collect();
 
-        foreach ($products as $product) {
-
-            $regular = (float) ($product->price->regular_price ?? 0);
-
-            $sale = $product->price->sale_price !== null
-                ? (float) $product->price->sale_price
-                : null;
-
-            $current = ($sale !== null && $sale < $regular)
-                ? $sale
-                : $regular;
-
-            $product->display_price = $current;
-            $product->display_regular_price = $regular;
-
-            $product->discount_percentage = (
-                $regular > 0 && $current < $regular
-            )
-                ? round((($regular - $current) / $regular) * 100)
-                : 0;
-
-            $product->thumbnail_url = $product->thumbnail
-                ? uploaded_asset($product->thumbnail)
-                : null;
-
-            $product->stock = (int) ($product->inventory->stock ?? 0);
-            $product->in_stock = $product->stock > 0;
-        }
-
-        return view('frontend.pages.all-products', compact('products', 'categories'));
+        return view('frontend.pages.home', compact('categories', 'sliders', 'categoryProducts', 'electronicsCategory'));
     }
 
     public function productDetail($slug)
@@ -302,15 +267,31 @@ class FrontendController extends Controller
             'inventory',
             'brand',
             'reviews',
-            'variants.attributeRel',   // ← ADDED: for variant modal
+            'variants.attributeRel',   // for variant modal
         ])
             ->where('is_published', 1);
 
+        /* ---------------- Category ---------------- */
         if ($categorySlug) {
             $category = Category::where('slug', $categorySlug)->firstOrFail();
             $productsQuery->where('category_id', $category->id);
         }
 
+        /* ---------------- Search (?q=) ---------------- */
+        $search = trim((string) $request->get('q', ''));
+
+        if ($search !== '') {
+            $like = '%' . addcslashes($search, '%_\\') . '%';
+
+            // grouped so the OR conditions don't break the other filters
+            $productsQuery->where(function ($w) use ($like) {
+                $w->where('products.name', 'like', $like)
+                    ->orWhereHas('variants', fn($v) => $v->where('sku', 'like', $like))
+                    ->orWhereHas('inventory', fn($i) => $i->where('sku', 'like', $like));
+            });
+        }
+
+        /* ---------------- Max price ---------------- */
         if ($request->filled('max_price')) {
             $maxPrice = (float) $request->max_price;
             $productsQuery->whereHas('price', function ($q) use ($maxPrice) {
@@ -318,18 +299,22 @@ class FrontendController extends Controller
             });
         }
 
+        /* ---------------- Rating ---------------- */
         if ($request->filled('rating')) {
             $minRating = (float) $request->rating;
             $productsQuery->withAvg('reviews', 'rating')
                 ->having('reviews_avg_rating', '>=', $minRating);
         }
 
+        /* ---------------- In stock (simple + variant products) ---------------- */
         if ($request->boolean('in_stock')) {
-            $productsQuery->whereHas('inventory', function ($q) {
-                $q->where('stock', '>', 0);
+            $productsQuery->where(function ($w) {
+                $w->whereHas('inventory', fn($q) => $q->where('stock', '>', 0))
+                    ->orWhereHas('variants', fn($q) => $q->where('quantity', '>', 0));
             });
         }
 
+        /* ---------------- On sale ---------------- */
         if ($request->boolean('on_sale')) {
             $productsQuery->whereHas('price', function ($q) {
                 $q->whereNotNull('sale_price')
@@ -337,20 +322,24 @@ class FrontendController extends Controller
             });
         }
 
+        /* ---------------- Sorting ---------------- */
         switch ($request->get('sort')) {
             case 'price_low':
                 $productsQuery->join('product_prices', 'products.id', '=', 'product_prices.product_id')
                     ->orderByRaw('COALESCE(NULLIF(product_prices.sale_price, 0), product_prices.regular_price) ASC')
                     ->select('products.*');
                 break;
+
             case 'price_high':
                 $productsQuery->join('product_prices', 'products.id', '=', 'product_prices.product_id')
                     ->orderByRaw('COALESCE(NULLIF(product_prices.sale_price, 0), product_prices.regular_price) DESC')
                     ->select('products.*');
                 break;
+
             case 'top_rated':
                 $productsQuery->withAvg('reviews', 'rating')->orderByDesc('reviews_avg_rating');
                 break;
+
             case 'newest':
             default:
                 $productsQuery->latest();
@@ -361,7 +350,7 @@ class FrontendController extends Controller
 
         $categories = Category::withCount('products')->latest()->take(8)->get();
 
-        // ----- AJAX -----
+        /* ---------------- AJAX ---------------- */
         if ($request->ajax() || $request->wantsJson()) {
             $html = view('frontend.partials.product-results', compact('products'))->render();
 
@@ -373,9 +362,8 @@ class FrontendController extends Controller
             ]);
         }
 
-        return view('frontend.pages.all-products', compact('products', 'category', 'categories'));
+        return view('frontend.pages.all-products', compact('products', 'category', 'categories', 'search'));
     }
-
 
     public function searchSuggestions(Request $request)
     {
@@ -424,5 +412,14 @@ class FrontendController extends Controller
             });
 
         return response()->json(['items' => $items, 'total' => $total]);
+    }
+
+    public function contactUs()
+    {
+        return view('frontend.pages.contact-us');
+    }
+    public function aboutUs()
+    {
+        return view('frontend.pages.about-us');
     }
 }

@@ -3210,7 +3210,7 @@
         </div>
     </section>
     <section class="container-fluid mt-14" aria-labelledby="cs-Elec">
-        <div class="grid gap-5 lg:grid-cols-[1fr_290px]">
+        <div class="grid lg:grid-cols-[1fr_290px]">
             <div class="lg:order-last relative overflow-hidden rounded-2xl p-6 flex flex-col text-white"
                 style="background:linear-gradient(160deg,#0e7d3b,#073a1d)">
                 <h3 class="text-2xl font-bold">Electronics</h3>
@@ -3236,7 +3236,7 @@
             </div>
             <div>
                 <div class="flex items-center justify-between mb-4">
-                    <h2 id="cs-Elec" class="section-title">Popular in Electronics</h2><a href="shop.html"
+                    <h2 id="cs-Elec" class="section-title">Popular in Electronics1</h2><a href="shop.html"
                         class="text-sm font-medium text-brand-600 hover:text-brand-800 inline-flex items-center gap-1.5">View
                         all
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -3759,554 +3759,196 @@
             </div>
         </div>
     </section>
-    <section class="container-fluid mt-14" aria-labelledby="cs-Home">
-        <div class="grid gap-5 lg:grid-cols-[290px_1fr]">
-            <div class="relative overflow-hidden rounded-2xl p-6 flex flex-col text-slate-900"
-                style="background:linear-gradient(160deg,#fbeedd,#f1d6b0)">
-                <h3 class="text-2xl font-bold">Home & Living</h3>
-                <p class="text-sm mt-1 text-slate-600">Comfort for every room</p>
-                <div class="mt-4 lg:mt-5 flex flex-wrap gap-2 lg:block lg:space-y-2"><a href="shop.html"
-                        class="flex items-center justify-between gap-2 rounded-xl px-3 lg:px-4 py-1.5 lg:py-2.5 text-[13px] font-medium transition lg:w-auto bg-white/70 hover:bg-white">Kitchen<span
-                            class="hidden lg:inline text-[11px] opacity-70">180+</span></a><a href="shop.html"
-                        class="flex items-center justify-between gap-2 rounded-xl px-3 lg:px-4 py-1.5 lg:py-2.5 text-[13px] font-medium transition lg:w-auto bg-white/70 hover:bg-white">Furniture<span
-                            class="hidden lg:inline text-[11px] opacity-70">75+</span></a><a href="shop.html"
-                        class="flex items-center justify-between gap-2 rounded-xl px-3 lg:px-4 py-1.5 lg:py-2.5 text-[13px] font-medium transition lg:w-auto bg-white/70 hover:bg-white">Decor
-                        & Lighting<span class="hidden lg:inline text-[11px] opacity-70">130+</span></a><a
-                        href="shop.html"
-                        class="flex items-center justify-between gap-2 rounded-xl px-3 lg:px-4 py-1.5 lg:py-2.5 text-[13px] font-medium transition lg:w-auto bg-white/70 hover:bg-white">Bedding<span
-                            class="hidden lg:inline text-[11px] opacity-70">90+</span></a></div>
-                <div class="hidden lg:grid flex-1 min-h-[120px] place-items-center text-[6.5rem] leading-none select-none"
-                    aria-hidden="true" style="filter:drop-shadow(0 16px 16px rgba(0,0,0,.2))">🛋️</div>
-                <a href="shop.html" class="btn btn-dark self-start mt-5 lg:mt-0">Shop Home & Living <svg
-                        class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+
+
+    @if (isset($categoryProducts) && $categoryProducts->count())
+        <section class="container-fluid mt-14" aria-labelledby="cs-Elec">
+
+            {{-- Section header --}}
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="cs-Elec" class="section-title">
+                    Popular in {{ optional($electronicsCategory)->category_name ?? 'Electronics' }}
+                </h2>
+                <a href="{{ route('frontend.all-products', ['category' => optional($electronicsCategory)->slug]) }}"
+                    class="text-sm font-medium text-brand-600 hover:text-brand-800 inline-flex items-center gap-1.5">
+                    View all
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M5 12h14" />
                         <path d="m12 5 7 7-7 7" />
-                    </svg></a>
+                    </svg>
+                </a>
             </div>
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h2 id="cs-Home" class="section-title">Popular in Home & Living</h2><a href="shop.html"
-                        class="text-sm font-medium text-brand-600 hover:text-brand-800 inline-flex items-center gap-1.5">View
-                        all
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M5 12h14" />
-                            <path d="m12 5 7 7-7 7" />
-                        </svg></a>
-                </div>
-                <div class="cat-grid grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    <article class="card pcard overflow-hidden flex flex-col ">
-                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                                class="block w-full h-full"><img src="https://placehold.co/400x400"
-                                    alt="Digital Air Fryer 6L" width="400" height="400" loading="lazy"
-                                    class="w-full h-full object-cover"></a><span
-                                class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-29%</span>
-                            <button
+
+            {{-- Product grid (full width) --}}
+            <div class="cat-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                @foreach ($categoryProducts as $product)
+                    @php
+                        /* ---------- Price ---------- */
+                        $regularPrice = (float) optional($product->price)->regular_price;
+                        $saleRaw = optional($product->price)->sale_price;
+                        $salePrice =
+                            $saleRaw !== null && (float) $saleRaw > 0 && (float) $saleRaw < $regularPrice
+                                ? (float) $saleRaw
+                                : $regularPrice;
+
+                        /* ---------- Basics ---------- */
+                        $productName = $product->name ?? 'Product';
+                        $productUrl = route('frontend.product-details', $product->slug);
+                        $productCat = optional($product->category)->category_name ?? 'Product';
+                        $productImage = $product->thumbnail ? uploaded_asset($product->thumbnail) : null;
+
+                        /* ---------- Variants ---------- */
+                        $hasVariants = $product->variants && $product->variants->count() > 0;
+
+                        $variantsJson = $hasVariants
+                            ? $product->variants
+                                ->map(function ($v) {
+                                    $decoded = !empty($v->attribute_value)
+                                        ? json_decode($v->attribute_value, true)
+                                        : null;
+                                    $label = is_array($decoded)
+                                        ? implode(' / ', array_values($decoded))
+                                        : optional($v->attributeRel)->name ?? 'Option';
+
+                                    return [
+                                        'id' => $v->id,
+                                        'label' => $label,
+                                        'price' => (float) $v->price,
+                                        'stock' => (int) $v->quantity,
+                                        'sku' => $v->sku,
+                                        'image' => !empty($v->image) ? uploaded_asset($v->image) : null,
+                                        'attributes' => is_array($decoded) ? $decoded : [],
+                                    ];
+                                })
+                                ->values()
+                                ->toArray()
+                            : [];
+
+                        /* ---------- Display price (variant range) ---------- */
+                        $displayPrice = $salePrice;
+                        $displayPriceMax = $salePrice;
+                        $hasPriceRange = false;
+
+                        if ($hasVariants) {
+                            $vp = array_filter(array_column($variantsJson, 'price'), fn($p) => $p > 0);
+                            if (count($vp)) {
+                                $displayPrice = min($vp);
+                                $displayPriceMax = max($vp);
+                                $hasPriceRange = $displayPriceMax > $displayPrice;
+                            }
+                        }
+
+                        $showStrikePrice = $regularPrice > 0 && $regularPrice > $displayPrice;
+                        $discountPercentage = $showStrikePrice
+                            ? round((($regularPrice - $displayPrice) / $regularPrice) * 100)
+                            : 0;
+
+                        /* ---------- Stock ---------- */
+                        $productInStock = $hasVariants
+                            ? collect($variantsJson)->sum('stock') > 0
+                            : (int) optional($product->inventory)->stock > 0;
+
+                        /* ---------- Reviews ---------- */
+                        $reviewCount = $product->reviews ? $product->reviews->count() : 0;
+                        $averageRating = $reviewCount > 0 ? round((float) $product->reviews->avg('rating'), 1) : 0;
+                    @endphp
+
+                    <article class="card pcard overflow-hidden flex flex-col">
+
+                        {{-- Image --}}
+                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100">
+                            <a href="{{ $productUrl }}" class="block w-full h-full">
+                                @if ($productImage)
+                                    <img src="{{ $productImage }}" alt="{{ $productName }}" width="400"
+                                        height="400" loading="lazy" class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full grid place-items-center text-slate-400">No Image</div>
+                                @endif
+                            </a>
+
+                            @if ($discountPercentage > 0)
+                                <span
+                                    class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">
+                                    -{{ $discountPercentage }}%
+                                </span>
+                            @endif
+
+                            <button type="button"
                                 class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
-                                aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
+                                aria-label="Add to wishlist">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <path
                                         d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                </svg></button>
+                                </svg>
+                            </button>
                         </div>
+
+                        {{-- Info --}}
                         <div class="p-3.5 flex flex-col flex-1">
-                            <p class="text-[11px] text-slate-400 mb-1">Home & Living</p>
-                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]"><a
-                                    href="product.html" class="hover:text-brand-600">Digital Air Fryer 6L</a>
+                            <p class="text-[11px] text-slate-400 mb-1">{{ $productCat }}</p>
+
+                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]">
+                                <a href="{{ $productUrl }}" class="hover:text-brand-600">{{ $productName }}</a>
                             </h3>
-                            <div class="mt-1.5 flex items-baseline gap-2"><span
-                                    class="font-bold text-brand-700">৳4,999</span><span
-                                    class="text-xs text-slate-400 line-through">৳6,999</span></div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                                    class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg></span><b class="text-slate-700">4.8</b>(95)</div>
-                            <button data-add data-id="3" data-name="Digital Air Fryer 6L" data-price="4999"
-                                data-emoji="🍳" data-c1="#fdeee3" data-c2="#f9dcc6"
-                                class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+                            {{-- Price --}}
+                            <div class="mt-1.5 flex items-baseline gap-2 flex-wrap">
+                                <span class="font-bold text-brand-700">
+                                    @if ($hasPriceRange)
+                                        ৳{{ number_format($displayPrice, 0) }}–৳{{ number_format($displayPriceMax, 0) }}
+                                    @else
+                                        ৳{{ number_format($displayPrice, 0) }}
+                                    @endif
+                                </span>
+                                @if ($showStrikePrice)
+                                    <span class="text-xs text-slate-400 line-through">
+                                        ৳{{ number_format($regularPrice, 0) }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            {{-- Rating --}}
+                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
+                                <span class="inline-flex text-star">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                            fill="{{ $i <= round($averageRating) ? 'currentColor' : 'none' }}"
+                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                            stroke-linejoin="round" aria-hidden="true">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
+                                    @endfor
+                                </span>
+                                <b class="text-slate-700">{{ number_format($averageRating, 1) }}</b>
+                                <span>({{ $reviewCount }})</span>
+                            </div>
+
+                            {{-- Add to cart / Select options --}}
+                            <button type="button" data-add data-id="{{ $product->id }}"
+                                data-name="{{ $productName }}" data-price="{{ $displayPrice }}"
+                                data-image="{{ $productImage }}" data-has-variants="{{ $hasVariants ? '1' : '0' }}"
+                                data-variants='@json($variantsJson)' data-detail-url="{{ $productUrl }}"
+                                class="btn btn-primary btn-sm w-full mt-3 {{ !$productInStock ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                {{ !$productInStock ? 'disabled' : '' }}>
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
                                     <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
                                     <path d="M3 6h18" />
                                     <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg> Add to Cart</button>
+                                </svg>
+                                {{ !$productInStock ? 'Out of Stock' : ($hasVariants ? 'Select Options' : 'Add to Cart') }}
+                            </button>
                         </div>
                     </article>
-                    <article class="card pcard overflow-hidden flex flex-col ">
-                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                                class="block w-full h-full"><img src="https://placehold.co/400x400"
-                                    alt="Portable Juicer Blender" width="400" height="400" loading="lazy"
-                                    class="w-full h-full object-cover"></a><span
-                                class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-30%</span>
-                            <button
-                                class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
-                                aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path
-                                        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                </svg></button>
-                        </div>
-                        <div class="p-3.5 flex flex-col flex-1">
-                            <p class="text-[11px] text-slate-400 mb-1">Home & Living</p>
-                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]"><a
-                                    href="product.html" class="hover:text-brand-600">Portable Juicer Blender</a>
-                            </h3>
-                            <div class="mt-1.5 flex items-baseline gap-2"><span
-                                    class="font-bold text-brand-700">৳1,399</span><span
-                                    class="text-xs text-slate-400 line-through">৳1,999</span></div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                                    class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg></span><b class="text-slate-700">4.5</b>(190)</div>
-                            <button data-add data-id="9" data-name="Portable Juicer Blender" data-price="1399"
-                                data-emoji="🥤" data-c1="#e3f1e5" data-c2="#cfe6d3"
-                                class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                                    <path d="M3 6h18" />
-                                    <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg> Add to Cart</button>
-                        </div>
-                    </article>
-                    <article class="card pcard overflow-hidden flex flex-col ">
-                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                                class="block w-full h-full"><img src="https://placehold.co/400x400"
-                                    alt="LED Desk Lamp" width="400" height="400" loading="lazy"
-                                    class="w-full h-full object-cover"></a><span
-                                class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-32%</span>
-                            <button
-                                class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
-                                aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path
-                                        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                </svg></button>
-                        </div>
-                        <div class="p-3.5 flex flex-col flex-1">
-                            <p class="text-[11px] text-slate-400 mb-1">Home & Living</p>
-                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]"><a
-                                    href="product.html" class="hover:text-brand-600">LED Desk Lamp</a></h3>
-                            <div class="mt-1.5 flex items-baseline gap-2"><span
-                                    class="font-bold text-brand-700">৳749</span><span
-                                    class="text-xs text-slate-400 line-through">৳1,099</span></div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                                    class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg></span><b class="text-slate-700">4.6</b>(64)</div>
-                            <button data-add data-id="16" data-name="LED Desk Lamp" data-price="749"
-                                data-emoji="💡" data-c1="#f6efe4" data-c2="#ecdfc9"
-                                class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                                    <path d="M3 6h18" />
-                                    <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg> Add to Cart</button>
-                        </div>
-                    </article>
-                    <article class="card pcard overflow-hidden flex flex-col ">
-                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                                class="block w-full h-full"><img src="https://placehold.co/400x400"
-                                    alt="Ceramic Dinner Set 12pcs" width="400" height="400" loading="lazy"
-                                    class="w-full h-full object-cover"></a><span
-                                class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-25%</span>
-                            <button
-                                class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
-                                aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path
-                                        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                </svg></button>
-                        </div>
-                        <div class="p-3.5 flex flex-col flex-1">
-                            <p class="text-[11px] text-slate-400 mb-1">Home & Living</p>
-                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]"><a
-                                    href="product.html" class="hover:text-brand-600">Ceramic Dinner Set
-                                    12pcs</a></h3>
-                            <div class="mt-1.5 flex items-baseline gap-2"><span
-                                    class="font-bold text-brand-700">৳2,999</span><span
-                                    class="text-xs text-slate-400 line-through">৳3,999</span></div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                                    class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg></span><b class="text-slate-700">4.8</b>(57)</div>
-                            <button data-add data-id="17" data-name="Ceramic Dinner Set 12pcs" data-price="2999"
-                                data-emoji="🍽️" data-c1="#eceff1" data-c2="#dde2e5"
-                                class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                                    <path d="M3 6h18" />
-                                    <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg> Add to Cart</button>
-                        </div>
-                    </article>
-                    <article class="card pcard overflow-hidden flex flex-col ">
-                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                                class="block w-full h-full"><img src="https://placehold.co/400x400"
-                                    alt="Memory Foam Pillow" width="400" height="400" loading="lazy"
-                                    class="w-full h-full object-cover"></a><span
-                                class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-31%</span>
-                            <button
-                                class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
-                                aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path
-                                        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                </svg></button>
-                        </div>
-                        <div class="p-3.5 flex flex-col flex-1">
-                            <p class="text-[11px] text-slate-400 mb-1">Home & Living</p>
-                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]"><a
-                                    href="product.html" class="hover:text-brand-600">Memory Foam Pillow</a></h3>
-                            <div class="mt-1.5 flex items-baseline gap-2"><span
-                                    class="font-bold text-brand-700">৳899</span><span
-                                    class="text-xs text-slate-400 line-through">৳1,299</span></div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                                    class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg></span><b class="text-slate-700">4.5</b>(83)</div>
-                            <button data-add data-id="18" data-name="Memory Foam Pillow" data-price="899"
-                                data-emoji="🛏️" data-c1="#efe9f8" data-c2="#ddd2f0"
-                                class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                                    <path d="M3 6h18" />
-                                    <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg> Add to Cart</button>
-                        </div>
-                    </article>
-                    <article class="card pcard overflow-hidden flex flex-col ">
-                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                                class="block w-full h-full"><img src="https://placehold.co/400x400"
-                                    alt="Non-stick Cookware Set" width="400" height="400" loading="lazy"
-                                    class="w-full h-full object-cover"></a><span
-                                class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-27%</span>
-                            <button
-                                class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
-                                aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path
-                                        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                </svg></button>
-                        </div>
-                        <div class="p-3.5 flex flex-col flex-1">
-                            <p class="text-[11px] text-slate-400 mb-1">Home & Living</p>
-                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]"><a
-                                    href="product.html" class="hover:text-brand-600">Non-stick Cookware Set</a>
-                            </h3>
-                            <div class="mt-1.5 flex items-baseline gap-2"><span
-                                    class="font-bold text-brand-700">৳2,199</span><span
-                                    class="text-xs text-slate-400 line-through">৳2,999</span></div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                                    class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg></span><b class="text-slate-700">4.7</b>(74)</div>
-                            <button data-add data-id="25" data-name="Non-stick Cookware Set" data-price="2199"
-                                data-emoji="🍲" data-c1="#fdeee3" data-c2="#f9dcc6"
-                                class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                                    <path d="M3 6h18" />
-                                    <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg> Add to Cart</button>
-                        </div>
-                    </article>
-                    <article class="card pcard overflow-hidden flex flex-col ">
-                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                                class="block w-full h-full"><img src="https://placehold.co/400x400"
-                                    alt="Rechargeable Table Fan" width="400" height="400" loading="lazy"
-                                    class="w-full h-full object-cover"></a><span
-                                class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-26%</span>
-                            <button
-                                class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
-                                aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path
-                                        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                </svg></button>
-                        </div>
-                        <div class="p-3.5 flex flex-col flex-1">
-                            <p class="text-[11px] text-slate-400 mb-1">Home & Living</p>
-                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]"><a
-                                    href="product.html" class="hover:text-brand-600">Rechargeable Table Fan</a>
-                            </h3>
-                            <div class="mt-1.5 flex items-baseline gap-2"><span
-                                    class="font-bold text-brand-700">৳1,399</span><span
-                                    class="text-xs text-slate-400 line-through">৳1,899</span></div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                                    class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg></span><b class="text-slate-700">4.5</b>(102)</div>
-                            <button data-add data-id="26" data-name="Rechargeable Table Fan" data-price="1399"
-                                data-emoji="🌬️" data-c1="#e4f4ef" data-c2="#cde9e0"
-                                class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                                    <path d="M3 6h18" />
-                                    <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg> Add to Cart</button>
-                        </div>
-                    </article>
-                    <article class="card pcard overflow-hidden flex flex-col ">
-                        <div class="relative pimg aspect-square overflow-hidden bg-slate-100"><a href="product.html"
-                                class="block w-full h-full"><img src="https://placehold.co/400x400"
-                                    alt="Modern Wall Clock" width="400" height="400" loading="lazy"
-                                    class="w-full h-full object-cover"></a><span
-                                class="absolute left-2.5 top-2.5 z-10 bg-[#e5383b] text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">-33%</span>
-                            <button
-                                class="wish absolute right-2.5 top-2.5 z-10 w-8 h-8 rounded-full bg-white/90 grid place-items-center text-slate-500 hover:text-[#e5383b]"
-                                aria-label="Add to wishlist"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                    stroke-linejoin="round" aria-hidden="true">
-                                    <path
-                                        d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                                </svg></button>
-                        </div>
-                        <div class="p-3.5 flex flex-col flex-1">
-                            <p class="text-[11px] text-slate-400 mb-1">Home & Living</p>
-                            <h3 class="text-[13px] font-medium text-slate-800 leading-snug min-h-[2.4em]"><a
-                                    href="product.html" class="hover:text-brand-600">Modern Wall Clock</a></h3>
-                            <div class="mt-1.5 flex items-baseline gap-2"><span
-                                    class="font-bold text-brand-700">৳799</span><span
-                                    class="text-xs text-slate-400 line-through">৳1,199</span></div>
-                            <div class="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><span
-                                    class="inline-flex text-star"><svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="1.8"
-                                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg><svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-                                        stroke-linejoin="round" aria-hidden="true">
-                                        <polygon
-                                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                                            fill="currentColor" />
-                                    </svg></span><b class="text-slate-700">4.6</b>(58)</div>
-                            <button data-add data-id="27" data-name="Modern Wall Clock" data-price="799"
-                                data-emoji="🕰️" data-c1="#f6efe4" data-c2="#ecdfc9"
-                                class="btn btn-primary btn-sm w-full mt-3"><svg class="w-3.5 h-3.5"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                                    <path d="M3 6h18" />
-                                    <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg> Add to Cart</button>
-                        </div>
-                    </article>
-                </div>
+                @endforeach
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
     <section class="container-fluid mt-16 text-center">
         <h2 class="section-title">Why Choose NexioMart?</h2>
