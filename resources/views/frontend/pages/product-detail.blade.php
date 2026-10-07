@@ -469,7 +469,7 @@
         <section class="container-fluid mt-14">
             <h2 class="section-title mb-5">You may also like</h2>
 
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 @foreach ($relatedProducts as $related)
                     @php
                         $relatedImage =

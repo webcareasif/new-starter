@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Better Products, Brighter Living | NexioMart</title>
     <meta name="description"
         content="NexioMart – quality products across Bangladesh with cash on delivery and easy returns.">
@@ -103,8 +104,10 @@
             <div class="flex justify-between text-sm"><span class="text-slate-500">Subtotal</span><b data-subtotal
                     class="text-base text-slate-900">৳0</b></div>
             <p class="text-[11px] text-slate-400">Delivery and coupons are calculated at checkout.</p>
-            <div class="grid grid-cols-2 gap-3"><a href="cart.html" class="btn btn-outline !py-3">View Cart</a><a
-                    href="checkout.html" class="btn btn-primary !py-3">Checkout</a></div>
+            <div class="grid grid-cols-2 gap-3">
+                <a href="{{ route('frontend.cart') }}" class="btn btn-outline !py-3">View Cart</a>
+                <a href="{{ route('frontend.checkout') }}" class="btn btn-primary !py-3">Checkout</a>
+            </div>
         </div>
     </aside>
     <script src="{{ asset('frontend/assets/js/main.js') }}"></script>
@@ -128,6 +131,18 @@
             /* --------------------------------------------------------
                Helpers
                -------------------------------------------------------- */
+            function esc(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+                    return {
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;'
+                    } [c];
+                });
+            }
+
             function getCart() {
                 try {
                     return JSON.parse(localStorage.getItem(CART_KEY)) || [];
@@ -141,50 +156,8 @@
                 updateCartUI();
             }
 
-            /**
-             * Get the currently selected variant from a container.
-             * Returns: { id: string|null, label: string|null }
-             */
-            function getSelectedVariant(sourceSelector) {
-                if (!sourceSelector) return {
-                    id: null,
-                    label: null
-                };
-
-                const container = document.querySelector(sourceSelector);
-                if (!container) return {
-                    id: null,
-                    label: null
-                };
-
-                const active = container.querySelector('.variant-btn.active-variant, [data-variant].active-variant');
-                if (!active) return {
-                    id: null,
-                    label: null
-                };
-
-                const id = active.dataset.variantId || null;
-
-                // Extract label: text content without the price span
-                let label = '';
-                const priceSpan = active.querySelector('span');
-                if (priceSpan) {
-                    // Clone the button, remove span, take text
-                    const clone = active.cloneNode(true);
-                    clone.querySelectorAll('span').forEach(s => s.remove());
-                    label = clone.textContent.trim();
-                } else {
-                    label = active.textContent.trim();
-                }
-
-                return {
-                    id: id,
-                    label: label
-                };
-            }
-
             /* --------------------------------------------------------
-               Cart UI
+               Cart UI (drawer)
                -------------------------------------------------------- */
             function updateCartUI() {
                 const cart = getCart();
@@ -210,8 +183,9 @@
                 cart.forEach(function(item, index) {
                     const qty = parseInt(item.qty || 1);
                     const price = parseFloat(item.price || 0);
-                    const image = item.image || FALLBACK_IMAGE;
-                    const variantLabel = item.variantLabel || '';
+                    const image = esc(item.image || FALLBACK_IMAGE);
+                    const variantLabel = esc(item.variantLabel || '');
+                    const name = esc(item.name || 'Product');
 
                     totalItems += qty;
                     subtotal += qty * price;
@@ -221,7 +195,7 @@
 
                         /* Image */
                         '<div class="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 shrink-0">' +
-                        '<img src="' + image + '" alt="' + (item.name || 'Product') +
+                        '<img src="' + image + '" alt="' + name +
                         '" class="w-full h-full object-cover" ' +
                         'onerror="this.onerror=null;this.src=\'' + FALLBACK_IMAGE + '\';">' +
                         '</div>' +
@@ -231,7 +205,7 @@
 
                         /* Name */
                         '<p class="text-[13px] font-medium text-slate-800 truncate">' +
-                        (item.name || 'Product') +
+                        name +
                         '</p>' +
 
                         /* Variant label */
@@ -338,26 +312,31 @@
                 if (!addBtn) return;
 
                 e.preventDefault();
+                if (addBtn.disabled) return;
+
+                /* Variant product on a listing card -> choose the option on the detail page */
+                if (addBtn.dataset.hasVariants === '1' && !addBtn.dataset.variantSource) {
+                    window.location.href = addBtn.dataset.detailUrl;
+                    return;
+                }
 
                 const id = String(addBtn.dataset.id);
                 const name = addBtn.dataset.name || 'Product';
                 const price = parseFloat(addBtn.dataset.price || 0);
                 const image = addBtn.dataset.image || '';
 
-                /* Read currently selected variant (if any) */
-                const variantSource = addBtn.dataset.variantSource || null;
-                const variant = getSelectedVariant(
-                    variantSource ? '#' + variantSource : null
-                );
+                /* Variant is stored on the button by the product page script */
+                const variantId = addBtn.dataset.variantId || null;
+                const variantLabel = addBtn.dataset.variantLabel || null;
 
-                /* Build a UNIQUE key so the same product with different
-                   variants is treated as separate cart lines. */
-                const cartKey = variant.id ? id + '::' + variant.id : id;
+                /* Unique key so the same product with different variants
+                   is treated as separate cart lines. */
+                const cartKey = variantId ? id + '::' + variantId : id;
 
                 let qty = 1;
                 if (addBtn.dataset.qtySrc) {
                     const qtyInput = document.querySelector(addBtn.dataset.qtySrc);
-                    if (qtyInput) qty = parseInt(qtyInput.value || 1);
+                    if (qtyInput) qty = Math.max(1, parseInt(qtyInput.value || 1));
                 }
 
                 const cart = getCart();
@@ -367,13 +346,14 @@
 
                 if (existing) {
                     existing.qty = parseInt(existing.qty || 1) + qty;
+                    existing.price = price; // keep latest displayed price
                     if (!existing.image && image) existing.image = image;
                 } else {
                     cart.push({
                         cartKey: cartKey,
                         id: id,
-                        variantId: variant.id || null,
-                        variantLabel: variant.label || null,
+                        variantId: variantId,
+                        variantLabel: variantLabel,
                         name: name,
                         price: price,
                         qty: qty,
@@ -382,6 +362,11 @@
                 }
 
                 saveCart(cart);
+
+                /* "Buy Now" -> go straight to checkout */
+                if (addBtn.hasAttribute('data-buy')) {
+                    window.location.href = addBtn.getAttribute('href');
+                }
             });
 
             document.addEventListener('DOMContentLoaded', updateCartUI);

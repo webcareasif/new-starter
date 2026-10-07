@@ -18,15 +18,12 @@
     <section class="container-fluid pt-10">
         @if ($featured)
             <a href="{{ route('blog.detail', $featured->slug) }}" class="card overflow-hidden grid md:grid-cols-2 group">
-                <div class="aspect-[16/10] md:aspect-auto">
-                    <div class="ph xl" style="background:linear-gradient(135deg,#f6efe4,#ecdfc9)">
-                        @if ($featured->thumbnail)
-                            <img src="{{ uploaded_asset($featured->thumbnail) }}" alt="{{ $featured->blog_title }}"
-                                style="height: 250px" class="w-full h-full object-cover">
-                        @else
-                            <span>🛒</span>
-                        @endif
-                    </div>
+                <div class="ph xl" style="background:linear-gradient(135deg,#f6efe4,#ecdfc9)">
+
+                    <img src="{{ uploaded_asset($featured->thumbnail) }}" alt="{{ $featured->name ?? 'Product Image' }}"
+                        class="w-full h-full object-cover" style="height: 250px"
+                        onerror="this.onerror=null; this.src='https://placehold.co/400x400';">
+
                 </div>
                 <div class="p-7 md:p-10 flex flex-col justify-center">
                     <p class="text-xs text-brand-600 font-medium">

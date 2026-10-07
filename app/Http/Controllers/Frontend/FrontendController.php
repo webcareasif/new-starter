@@ -6,11 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Blog;
 use App\Models\Admin\Campaign;
 use App\Models\Admin\Category;
+use App\Models\Admin\Order;
 use App\Models\Admin\Product;
 use App\Models\Admin\Slider;
 use Illuminate\Support\Str;
 use Auth;
 use Illuminate\Http\Request;
+
+
+use App\Models\Admin\ProductVarient;
+use App\Models\OrderDetail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class FrontendController extends Controller
 {
@@ -18,7 +26,6 @@ class FrontendController extends Controller
 
     public function home()
     {
-        // relations needed by the product card partial
         $with = ['price', 'category', 'inventory', 'reviews', 'variants.attributeRel'];
 
         /* ---------------- Categories (sidebar + mobile circles + tabs) ---------------- */
@@ -508,7 +515,7 @@ class FrontendController extends Controller
             $query->whereRaw('FIND_IN_SET(?, REPLACE(tags, " ", ""))', [$tag]);
         }
 
-        $blogs = $query->latest()->paginate(9)->withQueryString();
+        $blogs = $query->latest()->paginate(13)->withQueryString();
 
         // First post becomes the big featured card, only on page 1 without filters
         $showFeatured = $blogs->currentPage() === 1 && $search === '' && $tag === '';
@@ -530,5 +537,288 @@ class FrontendController extends Controller
             ->get();
 
         return view('frontend.pages.blog-detail', compact('blog', 'relatedBlogs'));
+    }
+
+    public function trackOrder(Request $request)
+    {
+        $order    = null;
+        $searched = false;
+
+        $orderId = trim((string) $request->get('code', ''));
+        $phone   = trim((string) $request->get('phone', ''));
+
+        if ($orderId !== '' || $phone !== '') {
+            $searched = true;
+
+            $query = Order::query();
+
+            if ($orderId !== '') {
+                $query->where('code', $orderId);
+            }
+
+            // if ($phone !== '') {
+            //     $query->where('phone_number', $phone);
+            // }
+
+            $order = $query->latest()->first();
+        }
+
+        // return $order;
+
+        return view('frontend.pages.track-order', compact('order', 'searched', 'orderId', 'phone'));
+    }
+
+
+    /* Delivery charge by area (change as needed) */
+    private const SHIPPING = ['inside' => 70, 'outside' => 130];
+
+    public function cart()
+    {
+        return view('frontend.pages.cart');
+    }
+
+    public function checkout()
+    {
+        return view('frontend.pages.checkout', ['shipping' => self::SHIPPING]);
+    }
+
+    /**
+     * Build trusted cart lines from the browser cart.
+     * Prices, names and stock ALWAYS come from the database.
+     */
+    private function buildLines(array $items): array
+    {
+        $lines    = [];
+        $errors   = [];
+        $subtotal = 0;
+
+        foreach (array_slice($items, 0, 50) as $item) {
+            $pid = (int) ($item['id'] ?? 0);
+            $vid = !empty($item['variantId']) ? (int) $item['variantId'] : null;
+            $qty = max(1, min(999, (int) ($item['qty'] ?? 1)));
+            $key = $vid ? $pid . '::' . $vid : (string) $pid;
+
+            $product = Product::with(['price', 'inventory'])
+                ->where('is_published', 1)
+                ->find($pid);
+
+            if (!$product) {
+                $errors[] = 'An item in your cart is no longer available.';
+                continue;
+            }
+
+            /* ---- base price ---- */
+            $regular = (float) optional($product->price)->regular_price;
+            $sale    = optional($product->price)->sale_price;
+            $price   = ($sale !== null && (float) $sale > 0 && (float) $sale < $regular)
+                ? (float) $sale : $regular;
+
+            $label = null;
+            $sku   = optional($product->inventory)->sku;
+            $stock = (int) optional($product->inventory)->stock;
+            $image = $product->thumbnail ? uploaded_asset($product->thumbnail) : null;
+
+            /* ---- variant ---- */
+            if ($vid) {
+                $variant = ProductVarient::where('product_id', $product->id)->find($vid);
+
+                if (!$variant) {
+                    $errors[] = "'{$product->name}': the selected option is no longer available.";
+                    continue;
+                }
+
+                $attrs = is_array($variant->attribute_value)
+                    ? $variant->attribute_value
+                    : (json_decode($variant->attribute_value, true) ?: []);
+
+                $label = $attrs ? implode(' / ', array_values($attrs)) : null;
+                $sku   = $variant->sku;
+                $stock = (int) $variant->quantity;
+                if ((float) $variant->price > 0) {
+                    $price = (float) $variant->price;
+                }
+                if (!empty($variant->image)) {
+                    $image = uploaded_asset($variant->image) ?: $image;
+                }
+            } elseif ($product->variants()->exists()) {
+                $errors[] = "'{$product->name}': please choose an option.";
+                continue;
+            }
+
+            if ($stock < 1) {
+                $errors[] = "'{$product->name}' is out of stock.";
+                continue;
+            }
+
+            if ($qty > $stock) {
+                $errors[] = "'{$product->name}': only {$stock} left in stock (quantity adjusted).";
+                $qty = $stock;
+            }
+
+            $lineTotal = $price * $qty;
+            $subtotal += $lineTotal;
+
+            $lines[] = [
+                'key'        => $key,
+                'product_id' => $product->id,
+                'variant_id' => $vid,
+                'name'       => $product->name,
+                'label'      => $label,
+                'sku'        => $sku,
+                'price'      => $price,
+                'qty'        => $qty,
+                'stock'      => $stock,
+                'image'      => $image,
+                'line_total' => $lineTotal,
+                'slug'       => $product->slug,
+            ];
+        }
+
+        return compact('lines', 'errors', 'subtotal');
+    }
+
+    private function shippingFor(?string $area): array
+    {
+        $area = $area === 'outside' ? 'outside' : 'inside';
+        return [$area, self::SHIPPING[$area]];
+    }
+
+    public function cartSummary(Request $request)
+    {
+        $items = $request->input('items', []);
+        if (!is_array($items)) {
+            $items = [];
+        }
+
+        $data = $this->buildLines($items);
+        [$area, $shipping] = $this->shippingFor($request->input('area'));
+
+        if (!count($data['lines'])) {
+            $shipping = 0;
+        }
+
+        return response()->json([
+            'lines'    => $data['lines'],
+            'errors'   => array_values(array_unique($data['errors'])),
+            'subtotal' => $data['subtotal'],
+            'shipping' => $shipping,
+            'total'    => $data['subtotal'] + $shipping,
+            'area'     => $area,
+        ]);
+    }
+
+    public function placeOrder(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name'    => 'required|string|max:100',
+            'phone'   => ['required', 'regex:/^(?:\+?88)?01[3-9]\d{8}$/'],
+            'address' => 'required|string|max:500',
+            'area'    => 'required|in:inside,outside',
+            'notes'   => 'nullable|string|max:500',
+            'items'   => 'required|array|min:1|max:50',
+        ], [
+            'phone.regex' => 'Please enter a valid Bangladeshi mobile number.',
+            'items.required' => 'Your cart is empty.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $order = DB::transaction(function () use ($request) {
+                $data = $this->buildLines($request->input('items'));
+
+                if (!count($data['lines']) || count($data['lines']) !== count($request->input('items'))) {
+                    throw new \RuntimeException(
+                        $data['errors'][0] ?? 'Some items in your cart changed. Please review your cart.'
+                    );
+                }
+
+                [$area, $shipping] = $this->shippingFor($request->input('area'));
+                $grandTotal = $data['subtotal'] + $shipping;
+
+                // normalise phone to 01XXXXXXXXX
+                $phone = preg_replace('/^(?:\+?88)/', '', $request->phone);
+
+                $order = Order::create([
+                    'code'             => $this->generateOrderCode(),
+                    'user_id'          => Auth::id(),          // null for guests
+                    'name'             => $request->name,
+                    'phone_number'     => $phone,
+                    'shipping_address' => $request->address,
+                    'shipping_type'    => $area,
+                    'shipping_cost'    => $shipping,
+                    'discount'         => 0,
+                    'coupon_discount'  => 0,
+                    'grand_total'      => $grandTotal,
+                    'payment_type'     => 'cod',
+                    'payment_status'   => 'unpaid',
+                    'delivery_status'  => 'pending',
+                    'order_type'       => 'online',
+                    'notes'            => $request->notes,
+                ]);
+
+                foreach ($data['lines'] as $line) {
+                    OrderDetail::create([
+                        'order_id'      => $order->id,
+                        'product_id'    => $line['product_id'],
+                        'variant_id'    => $line['variant_id'],
+                        'sku'           => $line['sku'],
+                        'variation'     => $line['variant_id']
+                            ? json_encode(['sku' => $line['sku'], 'label' => $line['label']])
+                            : null,
+                        'price'         => $line['price'],
+                        'quantity'      => $line['qty'],
+                        'tax'           => 0,
+                        'shipping_cost' => 0,
+                    ]);
+                }
+
+                return $order;
+            });
+
+            session(['last_order_code' => $order->code]);
+
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Order placed successfully!',
+                'redirect' => route('frontend.order.success', $order->code),
+            ]);
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            Log::error('Place order failed: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong while placing your order. Please try again.',
+            ], 500);
+        }
+    }
+
+    public function orderSuccess($code)
+    {
+        // only the browser that placed the order can see this page
+        abort_unless(session('last_order_code') === $code, 404);
+
+        $order = Order::with(['orderDetails.product'])->where('code', $code)->firstOrFail();
+
+        return view('frontend.pages.order-success', compact('order'));
+    }
+
+    private function generateOrderCode(): string
+    {
+        do {
+            $code = 'NX' . now()->format('ymd') . strtoupper(Str::random(5));
+        } while (Order::where('code', $code)->exists());
+
+        return $code;
     }
 }

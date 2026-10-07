@@ -64,32 +64,34 @@
 
     <div class="hidden lg:block border-t border-slate-100">
         <div class="container-fluid flex items-center gap-8">
-            <div class="dd-wrap relative"><button
-                    class="btn btn-primary !rounded-lg !py-2 !px-4 !text-[13px] my-1.5"><svg class="w-4 h-4"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect width="7" height="7" x="3" y="3" rx="1" />
-                        <rect width="7" height="7" x="14" y="3" rx="1" />
-                        <rect width="7" height="7" x="14" y="14" rx="1" />
-                        <rect width="7" height="7" x="3" y="14" rx="1" />
-                    </svg> All Categories <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                        aria-hidden="true">
-                        <path d="m6 9 6 6 6-6" />
-                    </svg></button>
-                <div
-                    class="dd absolute left-0 top-full w-60 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50">
-                    @foreach ($categories as $category)
-                        <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
-                            class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
-                                class="text-lg">
-                                <img src="{{ uploaded_asset($category->category_image) }}" alt="Icon"
-                                    class="w-5 h-5 object-cover rounded-full">
-                            </span>{{ $category->category_name }}</a>
-                    @endforeach
+            @if (!request()->routeIs('frontend.home'))
+                <div class="dd-wrap relative"><button
+                        class="btn btn-primary !rounded-lg !py-2 !px-4 !text-[13px] my-1.5"><svg class="w-4 h-4"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect width="7" height="7" x="3" y="3" rx="1" />
+                            <rect width="7" height="7" x="14" y="3" rx="1" />
+                            <rect width="7" height="7" x="14" y="14" rx="1" />
+                            <rect width="7" height="7" x="3" y="14" rx="1" />
+                        </svg> All Categories <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true">
+                            <path d="m6 9 6 6 6-6" />
+                        </svg></button>
+                    <div
+                        class="dd absolute left-0 top-full w-60 bg-white border border-slate-100 rounded-xl shadow-xl py-2 z-50">
+                        @foreach ($categories as $category)
+                            <a href="{{ route('frontend.all-products', ['category' => $category->slug]) }}"
+                                class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-brand-50 hover:text-brand-700"><span
+                                    class="text-lg">
+                                    <img src="{{ uploaded_asset($category->category_image) }}" alt="Icon"
+                                        class="w-5 h-5 object-cover rounded-full">
+                                </span>{{ $category->category_name }}</a>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-            <nav class="flex items-center gap-7" aria-label="Main">
+            @endif
+            <nav class="flex items-center gap-7 justify-center" aria-label="Main" style="align-content: center">
                 <a href="{{ route('frontend.home') }}"
                     class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.home') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
                     Home
@@ -117,7 +119,7 @@
 
 
 
-                <a href="track-order.html"
+                <a href="{{ route('frontend.track.order') }}"
                     class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Track Order
                 </a>
             </nav>

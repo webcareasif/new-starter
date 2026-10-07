@@ -294,7 +294,7 @@
 
 
     <section class="container-fluid mt-10 grid md:grid-cols-2 gap-5">
-        <a href="shop.html"
+        <a href="{{ route('frontend.all-products') }}"
             class="relative overflow-hidden rounded-2xl p-7 min-h-[200px] flex flex-col justify-center text-white"
             style="background:linear-gradient(110deg,#2b6a3d,#4c8a58)">
             <p class="text-sm opacity-90">New Arrivals</p>
@@ -307,7 +307,7 @@
                 </svg></span>
             <span class="absolute right-6 bottom-0 text-[9rem] leading-none opacity-95">🧔</span>
         </a>
-        <a href="shop.html"
+        <a href="{{ route('frontend.all-products') }}"
             class="relative overflow-hidden rounded-2xl p-7 min-h-[200px] flex flex-col justify-center text-white"
             style="background:linear-gradient(110deg,#1f5e33,#3f8350)">
             <p class="text-sm opacity-90">Home &amp; Living</p>
