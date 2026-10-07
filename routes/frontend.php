@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\ProfileController;
+use App\Http\Controllers\Frontend\WishlistController;
 use App\Http\Controllers\User\UserAuthController;
 
 Route::get('/', [FrontendController::class, 'home'])->name('frontend.home');
@@ -67,4 +68,7 @@ Route::prefix('wishlist')->name('frontend.wishlist.')->group(function () {
     Route::post('/remove',   [WishlistController::class, 'remove'])->name('remove');
     Route::post('/clear',    [WishlistController::class, 'clear'])->name('clear');
     Route::get('/count',     [WishlistController::class, 'count'])->name('count');
+
+    Route::post('/wishlist/ids', [WishlistController::class, 'ids'])
+        ->name('ids');
 });

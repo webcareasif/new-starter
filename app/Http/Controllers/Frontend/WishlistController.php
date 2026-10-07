@@ -198,4 +198,30 @@ class WishlistController extends Controller
             ]);
         }
     }
+
+
+    public function ids(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (! is_array($ids) || empty($ids)) {
+            return response()->json(['success' => true, 'ids' => []]);
+        }
+
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+
+        if (Auth::check()) {
+            $wishlisted = Wishlist::where('user_id', Auth::id())
+                ->whereIn('product_id', $ids)
+                ->pluck('product_id')
+                ->all();
+        } else {
+            $session = session()->get(self::SESSION_KEY, []);
+            $wishlisted = array_values(array_intersect(array_map('intval', $session), $ids));
+        }
+
+        return response()->json([
+            'success' => true,
+            'ids'     => $wishlisted,
+        ]);
+    }
 }

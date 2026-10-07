@@ -27,29 +27,61 @@
         ])
 
         <div class="ml-auto flex items-center sm:gap-3 text-[11px] text-slate-600">
-            <a href="login.html" class="flex flex-col items-center px-1.5 sm:px-2 hover:text-brand-600"><span><svg
-                        class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                    </svg></span><span class="hidden sm:block">Account</span></a>
-            <a href="wishlist.html" class="relative flex flex-col items-center px-1.5 sm:px-2 hover:text-brand-600"><svg
-                    class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+
+            {{-- ================= Account (login-aware) ================= --}}
+            @auth
+                <a href="{{ route('frontend.profile') }}"
+                    class="flex flex-col items-center px-1.5 sm:px-2 hover:text-brand-600"
+                    title="{{ auth()->user()->name }}">
+                    <span>
+                        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </span>
+                    <span class="hidden sm:block">Account</span>
+                </a>
+            @else
+                <a href="{{ route('frontend.login') }}"
+                    class="flex flex-col items-center px-1.5 sm:px-2 hover:text-brand-600">
+                    <span>
+                        <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </span>
+                    <span class="hidden sm:block">Sign in</span>
+                </a>
+            @endauth
+
+            {{-- ================= Wishlist ================= --}}
+            <a href="{{ route('frontend.wishlist.index') }}"
+                class="relative flex flex-col items-center px-1.5 sm:px-2 hover:text-brand-600" title="Wishlist">
+                <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path
                         d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                </svg><span class="hidden sm:block">Wishlist</span><b
-                    class="absolute -top-1 right-0 bg-brand-600 text-white text-[9px] w-4 h-4 rounded-full grid place-items-center">4</b></a>
-            <a href="cart.html" data-cart-open
-                class="relative flex flex-col items-center px-1.5 sm:px-2 hover:text-brand-600"
-                aria-haspopup="dialog"><svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-                    aria-hidden="true">
+                </svg>
+                <span class="hidden sm:block">Wishlist</span>
+                <b class="js-wish-count hidden absolute -top-1 right-0 bg-brand-600 text-white text-[9px] w-4 h-4 rounded-full grid place-items-center"
+                    data-initial="{{ $wishlistCount ?? 0 }}">{{ $wishlistCount ?? 0 }}</b>
+            </a>
+
+            {{-- ================= Cart ================= --}}
+            <a href="{{ route('frontend.cart') }}" data-cart-open
+                class="relative flex flex-col items-center px-1.5 sm:px-2 hover:text-brand-600" aria-haspopup="dialog">
+                <svg class="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="8" cy="21" r="1" />
                     <circle cx="19" cy="21" r="1" />
                     <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-                </svg><span class="hidden sm:block">Cart</span><b data-cart-count
-                    class="absolute -top-1 right-0 bg-brand-600 text-white text-[9px] w-4 h-4 rounded-full grid place-items-center">0</b></a>
+                </svg>
+                <span class="hidden sm:block">Cart</span>
+                <b data-cart-count
+                    class="absolute -top-1 right-0 bg-brand-600 text-white text-[9px] w-4 h-4 rounded-full grid place-items-center hidden">0</b>
+            </a>
         </div>
     </div>
 
