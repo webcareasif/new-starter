@@ -24,8 +24,6 @@ use Illuminate\Support\Facades\Validator;
 
 class FrontendController extends Controller
 {
-
-
     public function home()
     {
         $with = ['price', 'category', 'inventory', 'reviews', 'variants.attributeRel'];

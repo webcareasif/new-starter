@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\Frontend\FrontendController;
-
+use App\Http\Controllers\Frontend\ProfileController;
+use App\Http\Controllers\User\UserAuthController;
 
 Route::get('/', [FrontendController::class, 'home'])->name('frontend.home');
 Route::get('/all-products', [FrontendController::class, 'allCategoryProducts'])->name('frontend.all-products');
@@ -31,3 +32,25 @@ Route::get('/order-success/{code}', [FrontendController::class, 'orderSuccess'])
 Route::get('/search/suggestions', [FrontendController::class, 'searchSuggestions'])
     ->middleware('throttle:60,1')
     ->name('frontend.search-suggestions');
+
+
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login',    [UserAuthController::class, 'showLogin'])->name('frontend.login');
+    Route::post('/login',   [UserAuthController::class, 'login'])->name('frontend.login.submit');
+    Route::get('/register', [UserAuthController::class, 'showRegister'])->name('frontend.register');
+    Route::post('/register', [UserAuthController::class, 'register'])->name('frontend.register.submit');
+});
+
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [UserAuthController::class, 'logout'])->name('frontend.logout');
+
+    // Profile
+    Route::get('/profile',            [ProfileController::class, 'index'])->name('frontend.profile');
+    Route::get('/profile/edit',       [ProfileController::class, 'edit'])->name('frontend.profile.edit');
+    Route::put('/profile',            [ProfileController::class, 'update'])->name('frontend.profile.update');
+    Route::put('/profile/password',   [ProfileController::class, 'updatePassword'])->name('frontend.profile.password');
+    Route::get('/profile/orders',     [ProfileController::class, 'orders'])->name('frontend.profile.orders');
+    Route::get('/profile/orders/{code}', [ProfileController::class, 'orderDetail'])->name('frontend.profile.order');
+});
