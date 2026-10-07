@@ -7,8 +7,6 @@ Route::get('/', [FrontendController::class, 'home'])->name('frontend.home');
 Route::get('/all-products', [FrontendController::class, 'allCategoryProducts'])->name('frontend.all-products');
 Route::get('/product/{slug}', [FrontendController::class, 'productDetail'])->name('frontend.product-details');
 
-// Route::get('checkout', [FrontendController::class, 'checkout'])->name('frontend.checkout');
-// Route::get('cart', [FrontendController::class, 'cart'])->name('frontend.cart');
 
 Route::get('/contact-us', [FrontendController::class, 'contactUs'])->name('frontend.contact-us');
 Route::get('/about-us', [FrontendController::class, 'aboutUs'])->name('frontend.about-us');
@@ -28,11 +26,6 @@ Route::post('/checkout', [FrontendController::class, 'placeOrder'])
 
 Route::get('/order-success/{code}', [FrontendController::class, 'orderSuccess'])
     ->name('frontend.order.success');
-
-
-
-
-
 
 
 Route::get('/search/suggestions', [FrontendController::class, 'searchSuggestions'])

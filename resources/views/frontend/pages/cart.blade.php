@@ -22,13 +22,32 @@
 
             <aside class="card p-5 h-fit">
                 <h2 class="font-semibold text-lg mb-4">Order Summary</h2>
+
+                {{-- Coupon --}}
+                <div class="mb-4 pb-4 border-b border-slate-100">
+                    <label class="label mb-1.5 block" for="couponInput">Have a coupon?</label>
+                    <div class="flex gap-2">
+                        <input id="couponInput" type="text" maxlength="50" placeholder="Enter code" autocomplete="off"
+                            class="flex-1 min-w-0 border border-slate-200 rounded-lg px-3 py-2 text-sm uppercase outline-none focus:border-brand-600 disabled:bg-slate-50 disabled:text-slate-500">
+                        <button id="couponBtn" type="button" class="btn btn-outline !py-2 !px-4 text-sm">Apply</button>
+                    </div>
+                    <p id="couponMsg" class="text-xs mt-1.5"></p>
+                </div>
+
                 <div class="flex justify-between text-sm mb-2">
                     <span class="text-slate-500">Selected items</span><b id="sumCount">0</b>
                 </div>
                 <div class="flex justify-between text-sm mb-2">
                     <span class="text-slate-500">Subtotal</span><b id="sumSub">৳0</b>
                 </div>
-                <p class="text-xs text-slate-400 mb-4">Delivery charge is calculated at checkout.</p>
+                <div id="sumDiscRow" class="flex justify-between text-sm mb-2 text-brand-700" style="display:none">
+                    <span id="sumDiscLabel">Coupon discount</span><b id="sumDisc">-৳0</b>
+                </div>
+                <div class="flex justify-between text-base pt-3 mt-2 border-t border-slate-100">
+                    <span class="font-semibold">Total</span><b id="sumTotal" class="text-brand-700">৳0</b>
+                </div>
+                <p class="text-xs text-slate-400 mt-1 mb-4">Delivery charge is calculated at checkout.</p>
+
                 <a id="checkoutBtn" href="{{ route('frontend.checkout') }}" class="btn btn-primary w-full !py-3">
                     Proceed to Checkout
                 </a>
@@ -45,6 +64,7 @@
                 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
                 const UNSEL_KEY = 'nexio_unselected'; // keys the user unticked (new items default to selected)
                 const CHECKOUT_KEY = 'nexio_checkout'; // keys sent to checkout
+                const COUPON_KEY = 'nexio_coupon'; // applied coupon code
 
                 const money = n => '৳' + Number(n).toLocaleString('en-US');
                 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -55,7 +75,12 @@
                     "'": '&#39;'
                 } [c]));
 
+                const couponInput = document.getElementById('couponInput');
+                const couponBtn = document.getElementById('couponBtn');
+                const couponMsg = document.getElementById('couponMsg');
+
                 let lines = [];
+                let couponInfo = null; // { code, discount } when valid for current selection
 
                 /* ---------------- selection state ---------------- */
                 function getUnselected() {
@@ -75,12 +100,109 @@
                     return lines.filter(l => !un.has(l.key));
                 }
 
+                /* ---------------- coupon ---------------- */
+                const getCoupon = () => localStorage.getItem(COUPON_KEY) || '';
+
+                function setMsg(text, ok) {
+                    couponMsg.textContent = text || '';
+                    couponMsg.className = 'text-xs mt-1.5 ' + (ok ? 'text-brand-700' : 'text-red-600');
+                }
+
+                function paintCouponBox() {
+                    const code = getCoupon();
+                    const applied = !!code;
+                    couponInput.value = code;
+                    couponInput.disabled = applied;
+                    couponBtn.textContent = applied ? 'Remove' : 'Apply';
+                }
+
+                /**
+                 * Ask the server what the coupon is worth for the SELECTED items.
+                 * fresh = true when the user just typed the code (invalid codes are not kept).
+                 */
+                async function refreshCoupon(fresh) {
+                    const code = getCoupon();
+                    const sel = selectedLines();
+
+                    if (!code) {
+                        couponInfo = null;
+                        setMsg('', true);
+                        paintCouponBox();
+                        return updateSummary();
+                    }
+
+                    if (!sel.length) {
+                        couponInfo = null;
+                        setMsg('Select at least one item to use your coupon.', false);
+                        paintCouponBox();
+                        return updateSummary();
+                    }
+
+                    const keys = new Set(sel.map(l => l.key));
+                    const items = NexioCart.getCart().filter(i => keys.has(i.cartKey));
+
+                    try {
+                        const res = await fetch(SUMMARY_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': CSRF
+                            },
+                            body: JSON.stringify({
+                                items: items,
+                                coupon: code
+                            })
+                        });
+                        const d = await res.json();
+
+                        if (d.coupon) {
+                            couponInfo = d.coupon;
+                            setMsg('Coupon "' + d.coupon.code + '" applied. You save ' + money(d.coupon.discount) + '.',
+                                true);
+                        } else {
+                            couponInfo = null;
+                            setMsg(d.coupon_error || 'Coupon could not be applied.', false);
+                            if (fresh) localStorage.removeItem(COUPON_KEY); // do not keep a wrong code
+                        }
+                    } catch (e) {
+                        couponInfo = null;
+                        setMsg('Could not check the coupon. Please try again.', false);
+                        if (fresh) localStorage.removeItem(COUPON_KEY);
+                    }
+
+                    paintCouponBox();
+                    updateSummary();
+                }
+
+                couponBtn.addEventListener('click', async function() {
+                    if (getCoupon()) { // Remove
+                        localStorage.removeItem(COUPON_KEY);
+                        return refreshCoupon(false);
+                    }
+                    const code = couponInput.value.trim().toUpperCase();
+                    if (!code) return setMsg('Please enter a coupon code.', false);
+
+                    couponBtn.disabled = true;
+                    localStorage.setItem(COUPON_KEY, code);
+                    await refreshCoupon(true);
+                    couponBtn.disabled = false;
+                });
+
+                couponInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        couponBtn.click();
+                    }
+                });
+
                 /* ---------------- load from server ---------------- */
                 async function load() {
                     const cart = NexioCart.getCart();
                     if (!cart.length) {
                         lines = [];
-                        return render([]);
+                        render([]);
+                        return refreshCoupon(false);
                     }
 
                     let data;
@@ -117,6 +239,7 @@
 
                     lines = data.lines;
                     render(data.errors);
+                    refreshCoupon(false);
                 }
 
                 /* ---------------- render ---------------- */
@@ -169,10 +292,18 @@
                     const sel = selectedLines();
                     const subtotal = sel.reduce((s, l) => s + l.line_total, 0);
                     const itemCount = sel.reduce((s, l) => s + l.qty, 0);
+                    const discount = couponInfo ? Number(couponInfo.discount) : 0;
 
                     document.getElementById('sumCount').textContent = sel.length + (sel.length === 1 ? ' product' :
                         ' products') + ' (' + itemCount + ' pcs)';
                     document.getElementById('sumSub').textContent = money(subtotal);
+
+                    const discRow = document.getElementById('sumDiscRow');
+                    discRow.style.display = discount > 0 ? '' : 'none';
+                    document.getElementById('sumDiscLabel').textContent = couponInfo ? 'Coupon (' + couponInfo.code + ')' :
+                        'Coupon discount';
+                    document.getElementById('sumDisc').textContent = '-' + money(discount);
+                    document.getElementById('sumTotal').textContent = money(Math.max(0, subtotal - discount));
 
                     const all = document.getElementById('selectAll');
                     all.checked = lines.length > 0 && sel.length === lines.length;
@@ -208,7 +339,7 @@
                     if (t.dataset.rm) mutate(t.dataset.rm, (c, i) => c.splice(i, 1));
                 });
 
-                /* Single product checkbox */
+                /* Single product checkbox -> discount depends on the selection, so re-check the coupon */
                 listEl.addEventListener('change', e => {
                     const cb = e.target.closest('[data-sel]');
                     if (!cb) return;
@@ -217,6 +348,7 @@
                     else un.add(cb.dataset.sel);
                     saveUnselected(un);
                     updateSummary();
+                    refreshCoupon(false);
                 });
 
                 /* Select all */
@@ -226,6 +358,7 @@
                     saveUnselected(un);
                     listEl.querySelectorAll('[data-sel]').forEach(cb => cb.checked = this.checked);
                     updateSummary();
+                    refreshCoupon(false);
                 });
 
                 /* Proceed: remember exactly which items go to checkout */
@@ -238,7 +371,10 @@
                     sessionStorage.setItem(CHECKOUT_KEY, JSON.stringify(sel.map(l => l.key)));
                 });
 
-                document.addEventListener('DOMContentLoaded', load);
+                document.addEventListener('DOMContentLoaded', function() {
+                    paintCouponBox();
+                    load();
+                });
             })();
         </script>
     @endpush

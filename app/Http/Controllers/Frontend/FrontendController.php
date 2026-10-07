@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin\Blog;
 use App\Models\Admin\Campaign;
 use App\Models\Admin\Category;
+use App\Models\Admin\Coupon;
 use App\Models\Admin\Order;
 use App\Models\Admin\Product;
 use App\Models\Admin\Slider;
@@ -16,6 +17,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Admin\ProductVarient;
 use App\Models\OrderDetail;
+use App\Models\ShippingCost;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -570,7 +572,7 @@ class FrontendController extends Controller
 
 
     /* Delivery charge by area (change as needed) */
-    private const SHIPPING = ['inside' => 70, 'outside' => 130];
+    private const SHIPPING = ['inside' => 60, 'outside' => 120];
 
     public function cart()
     {
@@ -579,7 +581,22 @@ class FrontendController extends Controller
 
     public function checkout()
     {
-        return view('frontend.pages.checkout', ['shipping' => self::SHIPPING]);
+        $shippingCosts = ShippingCost::where('status', '1')->get();
+
+        // Map to a keyed array: ['inside' => 60, 'outside' => 120]
+        $shipping = [];
+        foreach ($shippingCosts as $cost) {
+            if (stripos($cost->name, 'inside') !== false) {
+                $shipping['inside'] = (float) $cost->amount;
+            } elseif (stripos($cost->name, 'outside') !== false) {
+                $shipping['outside'] = (float) $cost->amount;
+            }
+        }
+
+        return view('frontend.pages.checkout', [
+            'shipping' => $shipping,
+            'shippingCosts' => $shippingCosts, // full collection if you need IDs/labels
+        ]);
     }
 
     /**
@@ -683,6 +700,113 @@ class FrontendController extends Controller
         return [$area, self::SHIPPING[$area]];
     }
 
+    public function orderSuccess($code)
+    {
+        // only the browser that placed the order can see this page
+        abort_unless(session('last_order_code') === $code, 404);
+
+        $order = Order::with(['orderDetails.product'])->where('code', $code)->firstOrFail();
+
+        return view('frontend.pages.order-success', compact('order'));
+    }
+
+    private function generateOrderCode(): string
+    {
+        do {
+            $code = 'NX' . now()->format('ymd') . strtoupper(Str::random(5));
+        } while (Order::where('code', $code)->exists());
+
+        return $code;
+    }
+
+    // ===================================================================== 
+    private function resolveCoupon(?string $code, array $lines, float $subtotal): array
+    {
+        $code = trim((string) $code);
+
+        if ($code === '') {
+            return [null, 0.0, null];
+        }
+
+        $coupon = Coupon::whereRaw('UPPER(code) = ?', [strtoupper($code)])->first();
+
+        if (!$coupon) {
+            return [null, 0.0, 'Invalid coupon code.'];
+        }
+
+        /* ---- dates (unix timestamps) ---- */
+        $now = now()->timestamp;
+
+        if ($coupon->start_date && $now < (int) $coupon->start_date) {
+            return [null, 0.0, 'This coupon is not active yet.'];
+        }
+
+        if ($coupon->end_date && $now > (int) $coupon->end_date) {
+            return [null, 0.0, 'This coupon has expired.'];
+        }
+
+        /* ---- details (JSON) ---- */
+        $details = $coupon->details;
+        if (is_string($details)) {
+            $details = json_decode($details, true);
+        }
+        $details = is_array($details) ? $details : [];
+
+        $value   = (float) $coupon->discount;
+        $percent = $coupon->discount_type === 'percent';
+
+        /* ---- product based: only the listed products get the discount ---- */
+        if ($coupon->type === 'product_base') {
+            $ids = [];
+            foreach ($details as $row) {
+                if (is_array($row) && isset($row['product_id'])) {
+                    $ids[] = (int) $row['product_id'];
+                }
+            }
+
+            $discount = 0.0;
+            $matched  = false;
+
+            foreach ($lines as $line) {
+                if (!in_array((int) $line['product_id'], $ids, true)) {
+                    continue;
+                }
+                $matched = true;
+
+                $d = $percent ? $line['line_total'] * ($value / 100) : $value;
+                $discount += min($d, $line['line_total']);
+            }
+
+            if (!$matched) {
+                return [null, 0.0, 'This coupon does not apply to the items in your cart.'];
+            }
+        }
+        /* ---- cart based: whole subtotal, with min_buy / max_discount ---- */ else {
+            $rules = (isset($details[0]) && is_array($details[0])) ? $details[0] : $details;
+
+            $minBuy      = (float) ($rules['min_buy'] ?? 0);
+            $maxDiscount = (float) ($rules['max_discount'] ?? 0);
+
+            if ($subtotal < $minBuy) {
+                return [null, 0.0, 'Minimum order of ৳' . number_format($minBuy) . ' required for this coupon.'];
+            }
+
+            $discount = $percent ? $subtotal * ($value / 100) : $value;
+
+            if ($percent && $maxDiscount > 0 && $discount > $maxDiscount) {
+                $discount = $maxDiscount;
+            }
+        }
+
+        $discount = round(min($discount, $subtotal), 2);
+
+        if ($discount <= 0) {
+            return [null, 0.0, 'This coupon cannot be applied to your cart.'];
+        }
+
+        return [$coupon, $discount, null];
+    }
+
     public function cartSummary(Request $request)
     {
         $items = $request->input('items', []);
@@ -693,17 +817,30 @@ class FrontendController extends Controller
         $data = $this->buildLines($items);
         [$area, $shipping] = $this->shippingFor($request->input('area'));
 
-        if (!count($data['lines'])) {
+        $discount    = 0.0;
+        $coupon      = null;
+        $couponError = null;
+
+        if (count($data['lines'])) {
+            [$coupon, $discount, $couponError] = $this->resolveCoupon(
+                $request->input('coupon'),
+                $data['lines'],
+                $data['subtotal']
+            );
+        } else {
             $shipping = 0;
         }
 
         return response()->json([
-            'lines'    => $data['lines'],
-            'errors'   => array_values(array_unique($data['errors'])),
-            'subtotal' => $data['subtotal'],
-            'shipping' => $shipping,
-            'total'    => $data['subtotal'] + $shipping,
-            'area'     => $area,
+            'lines'        => $data['lines'],
+            'errors'       => array_values(array_unique($data['errors'])),
+            'subtotal'     => $data['subtotal'],
+            'shipping'     => $shipping,
+            'discount'     => $discount,
+            'total'        => max(0, $data['subtotal'] + $shipping - $discount),
+            'area'         => $area,
+            'coupon'       => $coupon ? ['code' => $coupon->code, 'discount' => $discount] : null,
+            'coupon_error' => $couponError,
         ]);
     }
 
@@ -715,9 +852,10 @@ class FrontendController extends Controller
             'address' => 'required|string|max:500',
             'area'    => 'required|in:inside,outside',
             'notes'   => 'nullable|string|max:500',
+            'coupon'  => 'nullable|string|max:50',
             'items'   => 'required|array|min:1|max:50',
         ], [
-            'phone.regex' => 'Please enter a valid Bangladeshi mobile number.',
+            'phone.regex'    => 'Please enter a valid Bangladeshi mobile number.',
             'items.required' => 'Your cart is empty.',
         ]);
 
@@ -740,7 +878,19 @@ class FrontendController extends Controller
                 }
 
                 [$area, $shipping] = $this->shippingFor($request->input('area'));
-                $grandTotal = $data['subtotal'] + $shipping;
+
+                /* Re-validate the coupon on the server */
+                [$coupon, $discount, $couponError] = $this->resolveCoupon(
+                    $request->input('coupon'),
+                    $data['lines'],
+                    $data['subtotal']
+                );
+
+                if ($couponError) {
+                    throw new \RuntimeException($couponError);
+                }
+
+                $grandTotal = max(0, $data['subtotal'] + $shipping - $discount);
 
                 // normalise phone to 01XXXXXXXXX
                 $phone = preg_replace('/^(?:\+?88)/', '', $request->phone);
@@ -754,7 +904,8 @@ class FrontendController extends Controller
                     'shipping_type'    => $area,
                     'shipping_cost'    => $shipping,
                     'discount'         => 0,
-                    'coupon_discount'  => 0,
+                    'coupon_code'      => $coupon?->code,
+                    'coupon_discount'  => $discount,
                     'grand_total'      => $grandTotal,
                     'payment_type'     => 'cod',
                     'payment_status'   => 'unpaid',
@@ -803,22 +954,33 @@ class FrontendController extends Controller
         }
     }
 
-    public function orderSuccess($code)
+    private function resolveImage($primary, $gallery = null): ?string
     {
-        // only the browser that placed the order can see this page
-        abort_unless(session('last_order_code') === $code, 404);
+        $ids = [$primary];
 
-        $order = Order::with(['orderDetails.product'])->where('code', $code)->firstOrFail();
+        if (!empty($gallery)) {
+            if (!is_array($gallery)) {
+                $decoded = json_decode($gallery, true);
+                // photos can be JSON ["1","2"] or a comma list "1,2"
+                $gallery = is_array($decoded) ? $decoded : explode(',', (string) $gallery);
+            }
+            $ids = array_merge($ids, $gallery);
+        }
 
-        return view('frontend.pages.order-success', compact('order'));
-    }
+        foreach ($ids as $id) {
+            $id = trim((string) $id);
+            if ($id === '') {
+                continue;
+            }
 
-    private function generateOrderCode(): string
-    {
-        do {
-            $code = 'NX' . now()->format('ymd') . strtoupper(Str::random(5));
-        } while (Order::where('code', $code)->exists());
+            $url = uploaded_asset($id);
 
-        return $code;
+            // skip the placeholder that uploaded_asset() falls back to
+            if ($url && stripos($url, 'placeholder') === false) {
+                return $url;
+            }
+        }
+
+        return null; // the blade shows a neat icon instead of a gray box
     }
 }

@@ -76,8 +76,22 @@
                 <h2 class="font-semibold text-lg mb-4">Your Order</h2>
                 <ul id="coLines" class="divide-y divide-slate-100 text-sm mb-4"></ul>
 
+                {{-- Coupon --}}
+                <div class="mb-4 pt-4 border-t border-slate-100">
+                    <label class="label mb-1.5 block" for="couponInput">Have a coupon?</label>
+                    <div class="flex gap-2">
+                        <input id="couponInput" type="text" maxlength="50" placeholder="Enter code" autocomplete="off"
+                            class="flex-1 min-w-0 border border-slate-200 rounded-lg px-3 py-2 text-sm uppercase outline-none focus:border-brand-600 disabled:bg-slate-50 disabled:text-slate-500">
+                        <button id="couponBtn" type="button" class="btn btn-outline !py-2 !px-4 text-sm">Apply</button>
+                    </div>
+                    <p id="couponMsg" class="text-xs mt-1.5"></p>
+                </div>
+
                 <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
                     <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><b id="coSub">৳0</b>
+                    </div>
+                    <div id="coDiscRow" class="flex justify-between text-brand-700" style="display:none">
+                        <span id="coDiscLabel">Coupon discount</span><b id="coDisc">-৳0</b>
                     </div>
                     <div class="flex justify-between"><span class="text-slate-500">Delivery</span><b id="coShip">৳0</b>
                     </div>
@@ -105,9 +119,14 @@
                 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
                 const CHECKOUT_KEY = 'nexio_checkout'; // keys chosen on the cart page
                 const UNSEL_KEY = 'nexio_unselected';
+                const COUPON_KEY = 'nexio_coupon';
 
                 const form = document.getElementById('checkoutForm');
                 const btn = document.getElementById('placeBtn');
+                const couponInput = document.getElementById('couponInput');
+                const couponBtn = document.getElementById('couponBtn');
+                const couponMsg = document.getElementById('couponMsg');
+
                 const money = n => '৳' + Number(n).toLocaleString('en-US');
                 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
                     '&': '&amp;',
@@ -117,6 +136,7 @@
                     "'": '&#39;'
                 } [c]));
                 const area = () => form.querySelector('[name="area"]:checked').value;
+                const getCoupon = () => localStorage.getItem(COUPON_KEY) || '';
 
                 /* ---------- Which cart items are being checked out? ---------- */
                 function selectedKeys() {
@@ -147,25 +167,70 @@
                     });
                 }
 
+                /* ---------- Coupon UI ---------- */
+                function setMsg(text, ok) {
+                    couponMsg.textContent = text || '';
+                    couponMsg.className = 'text-xs mt-1.5 ' + (ok ? 'text-brand-700' : 'text-red-600');
+                }
+
+                function paintCouponBox() {
+                    const code = getCoupon();
+                    couponInput.value = code;
+                    couponInput.disabled = !!code;
+                    couponBtn.textContent = code ? 'Remove' : 'Apply';
+                }
+
+                couponBtn.addEventListener('click', async function() {
+                    if (getCoupon()) { // Remove
+                        localStorage.removeItem(COUPON_KEY);
+                        setMsg('', true);
+                        paintCouponBox();
+                        return loadSummary();
+                    }
+                    const code = couponInput.value.trim().toUpperCase();
+                    if (!code) return setMsg('Please enter a coupon code.', false);
+
+                    couponBtn.disabled = true;
+                    localStorage.setItem(COUPON_KEY, code);
+                    await loadSummary(); // invalid codes are cleared automatically below
+                    couponBtn.disabled = false;
+                });
+
+                couponInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        couponBtn.click();
+                    }
+                });
+
+                /* ---------- Summary ---------- */
                 async function loadSummary() {
                     const items = checkoutItems();
                     if (!items.length) {
                         window.location.href = CART_URL;
                         return;
                     }
-                    const res = await fetch(SUMMARY_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': CSRF
-                        },
-                        body: JSON.stringify({
-                            items: items,
-                            area: area()
-                        })
-                    });
-                    const d = await res.json();
+
+                    let d;
+                    try {
+                        const res = await fetch(SUMMARY_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': CSRF
+                            },
+                            body: JSON.stringify({
+                                items: items,
+                                area: area(),
+                                coupon: getCoupon()
+                            })
+                        });
+                        d = await res.json();
+                    } catch (e) {
+                        return showErrors(['Could not load your order. Please refresh the page.']);
+                    }
+
                     hasItems = d.lines.length > 0;
 
                     document.getElementById('coLines').innerHTML = d.lines.map(l => `
@@ -176,6 +241,26 @@
                             </span>
                             <b class="shrink-0">${money(l.line_total)}</b>
                         </li>`).join('');
+
+                    /* Coupon result */
+                    if (d.coupon) {
+                        setMsg('Coupon "' + d.coupon.code + '" applied. You save ' + money(d.coupon.discount) + '.',
+                            true);
+                    } else if (d.coupon_error) {
+                        // A bad coupon must never block the order, so drop it and tell the customer.
+                        localStorage.removeItem(COUPON_KEY);
+                        setMsg(d.coupon_error + ' The coupon was removed.', false);
+                    } else if (!getCoupon()) {
+                        setMsg('', true);
+                    }
+                    paintCouponBox();
+
+                    const discount = Number(d.discount || 0);
+                    document.getElementById('coDiscRow').style.display = discount > 0 ? '' : 'none';
+                    document.getElementById('coDiscLabel').textContent = d.coupon ? 'Coupon (' + d.coupon.code + ')' :
+                        'Coupon discount';
+                    document.getElementById('coDisc').textContent = '-' + money(discount);
+
                     document.getElementById('coSub').textContent = money(d.subtotal);
                     document.getElementById('coShip').textContent = money(d.shipping);
                     document.getElementById('coTotal').textContent = money(d.total);
@@ -199,6 +284,7 @@
                         address: el['address'].value.trim(),
                         area: area(),
                         notes: el['notes'].value.trim(),
+                        coupon: getCoupon(),
                         items: items
                     };
 
@@ -234,6 +320,7 @@
                             NexioCart.saveCart(remaining);
                             sessionStorage.removeItem(CHECKOUT_KEY);
                             sessionStorage.removeItem(UNSEL_KEY);
+                            localStorage.removeItem(COUPON_KEY);
                             window.location.href = d.redirect;
                             return;
                         }
@@ -249,7 +336,10 @@
                     btn.textContent = original;
                 });
 
-                document.addEventListener('DOMContentLoaded', loadSummary);
+                document.addEventListener('DOMContentLoaded', function() {
+                    paintCouponBox();
+                    loadSummary();
+                });
             })();
         </script>
     @endpush
