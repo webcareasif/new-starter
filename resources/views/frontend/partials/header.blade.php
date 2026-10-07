@@ -133,12 +133,6 @@
                     class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.all-products') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
                     Products
                 </a>
-                <a href="shop.html"
-                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Categories</a>
-                <a href="{{ route('frontend.home') }}#flash"
-                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Flash Sale</a>
-                <a href="shop.html"
-                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Offers</a>
                 <a href="{{ route('frontend.blogs') }}"
                     class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.blogs') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
                     Blogs
