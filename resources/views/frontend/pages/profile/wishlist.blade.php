@@ -35,7 +35,7 @@
                             products</a>
                     </div>
                 @else
-                    <div id="wishlistGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div id="wishlistGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                         @foreach ($products as $p)
                             @php
                                 /* ---------- Base price ---------- */

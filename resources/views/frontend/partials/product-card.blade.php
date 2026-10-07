@@ -1,7 +1,3 @@
-{{-- resources/views/frontend/partials/product-card.blade.php --}}
-{{-- Usage: @include('frontend.partials.product-card', ['product' => $product, 'cardClass' => '']) --}}
-{{-- Needs eager loaded: price, category, inventory, reviews, variants.attributeRel --}}
-
 @php
     /* ---------- Price ---------- */
     $regularPrice = (float) optional($product->price)->regular_price;
