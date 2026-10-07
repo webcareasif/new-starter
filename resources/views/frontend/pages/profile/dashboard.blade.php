@@ -39,21 +39,46 @@
                     </div>
 
                     @forelse ($orders as $order)
+                        @php
+                            $status = $order->delivery_status ?? 'pending';
+                            $badge = match ($status) {
+                                'pending' => 'bg-amber-50 text-amber-700',
+                                'processing' => 'bg-blue-50 text-blue-700',
+                                'shipped' => 'bg-indigo-50 text-indigo-700',
+                                'delivered' => 'bg-green-50 text-green-700',
+                                'cancelled' => 'bg-red-50 text-red-700',
+                                default => 'bg-slate-100 text-slate-600',
+                            };
+                        @endphp
+
                         <div class="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
                             <div>
                                 <a href="{{ route('frontend.profile.order', $order->code) }}"
-                                    class="font-medium text-slate-800 hover:text-brand-600">#{{ $order->code }}</a>
-                                <p class="text-xs text-slate-500">{{ $order->created_at->format('d M Y') }} ·
-                                    {{ $order->items_count ?? '' }}</p>
+                                    class="font-medium text-slate-800 hover:text-brand-600">
+                                    #{{ $order->code }}
+                                </a>
+                                <p class="text-xs text-slate-500">
+                                    {{ \Carbon\Carbon::parse($order->created_at)->format('d M Y') }}
+                                    @if ($order->order_details_count ?? false)
+                                        · {{ $order->order_details_count }}
+                                        item{{ $order->order_details_count > 1 ? 's' : '' }}
+                                    @endif
+                                </p>
                             </div>
                             <div class="text-right">
-                                <p class="font-semibold">৳{{ number_format($order->total) }}</p>
-                                <span
-                                    class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ ucfirst($order->status) }}</span>
+                                {{-- grand_total — NOT total --}}
+                                <p class="font-semibold">
+                                    ৳{{ number_format((float) $order->grand_total) }}
+                                </p>
+                                <span class="text-xs px-2 py-0.5 rounded-full {{ $badge }}">
+                                    {{ ucfirst($status) }}
+                                </span>
                             </div>
                         </div>
                     @empty
-                        <p class="text-sm text-slate-500 py-6 text-center">You haven't placed any orders yet.</p>
+                        <p class="text-sm text-slate-500 py-6 text-center">
+                            You haven't placed any orders yet.
+                        </p>
                     @endforelse
                 </div>
             </div>

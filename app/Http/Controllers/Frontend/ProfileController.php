@@ -20,10 +20,18 @@ class ProfileController extends Controller
             ->take(5)
             ->get();
 
+        $base = Order::where('user_id', $user->id);
+
         $stats = [
-            'total'     => Order::where('user_id', $user->id)->count(),
-            'pending'   => Order::where('user_id', $user->id)->count(),
-            'completed' => Order::where('user_id', $user->id)->count(),
+            'total' => (clone $base)->count(),
+
+            'pending' => (clone $base)
+                ->whereIn('delivery_status', ['pending', 'processing', 'shipped'])
+                ->count(),
+
+            'completed' => (clone $base)
+                ->where('delivery_status', 'delivered')
+                ->count(),
         ];
 
         return view('frontend.pages.profile.dashboard', compact('user', 'orders', 'stats'));
@@ -75,7 +83,7 @@ class ProfileController extends Controller
 
     public function orderDetail(string $code)
     {
-        $order = Order::where('user_id', Auth::id())
+        $order = Order::with('orderDetails')->where('user_id', Auth::id())
             ->where('code', $code)
             ->firstOrFail();
 

@@ -40,6 +40,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/login',   [UserAuthController::class, 'login'])->name('frontend.login.submit');
     Route::get('/register', [UserAuthController::class, 'showRegister'])->name('frontend.register');
     Route::post('/register', [UserAuthController::class, 'register'])->name('frontend.register.submit');
+    Route::get('/check-email', [UserAuthController::class, 'checkEmail'])
+        ->middleware('throttle:30,1')->name('frontend.check.email');
+
+    Route::get('/check-phone', [UserAuthController::class, 'checkPhone'])
+        ->middleware('throttle:30,1')->name('frontend.check.phone');
 });
 
 
@@ -53,4 +58,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/password',   [ProfileController::class, 'updatePassword'])->name('frontend.profile.password');
     Route::get('/profile/orders',     [ProfileController::class, 'orders'])->name('frontend.profile.orders');
     Route::get('/profile/orders/{code}', [ProfileController::class, 'orderDetail'])->name('frontend.profile.order');
+});
+
+
+Route::prefix('wishlist')->name('frontend.wishlist.')->group(function () {
+    Route::get('/',          [WishlistController::class, 'index'])->name('index');
+    Route::post('/toggle',   [WishlistController::class, 'toggle'])->name('toggle');
+    Route::post('/remove',   [WishlistController::class, 'remove'])->name('remove');
+    Route::post('/clear',    [WishlistController::class, 'clear'])->name('clear');
+    Route::get('/count',     [WishlistController::class, 'count'])->name('count');
 });
