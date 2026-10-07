@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 
 
 use App\Models\Admin\ProductVarient;
+use App\Models\Admin\Review;
 use App\Models\OrderDetail;
 use App\Models\ShippingCost;
 use Illuminate\Support\Facades\DB;
@@ -114,6 +115,9 @@ class FrontendController extends Controller
             ->take(3)
             ->get();
 
+
+        $reviews = Review::latest('id')->take(3)->get();
+
         return view('frontend.pages.home', compact(
             'categories',
             'sliders',
@@ -121,7 +125,8 @@ class FrontendController extends Controller
             'bestSelling',
             'bestTabs',
             'categorySections',
-            'testimonials'
+            'testimonials',
+            'reviews'
         ));
     }
 
@@ -359,6 +364,14 @@ class FrontendController extends Controller
                 $w->where('products.name', 'like', $like)
                     ->orWhereHas('variants', fn($v) => $v->where('sku', 'like', $like))
                     ->orWhereHas('inventory', fn($i) => $i->where('sku', 'like', $like));
+            });
+        }
+
+        /* ---------------- Min price ---------------- */
+        if ($request->filled('min_price')) {
+            $minPrice = (float) $request->min_price;
+            $productsQuery->whereHas('price', function ($q) use ($minPrice) {
+                $q->whereRaw('COALESCE(NULLIF(sale_price, 0), regular_price) >= ?', [$minPrice]);
             });
         }
 

@@ -461,6 +461,62 @@
         </div>
     </section>
 
+    <section class="container-fluid mt-16">
+        <div class="text-center mb-7">
+            <h2 class="section-title">What Our Customers Say</h2>
+            <p class="text-xs text-slate-500 mt-1">Real feedback from our valued customers</p>
+        </div>
+        @if ($testimonials->count())
+            <div class="grid md:grid-cols-3 gap-5">
+                @foreach ($testimonials as $review)
+                    <figure class="card p-5">
+                        {{-- big quote mark --}}
+                        <div class="text-brand-600 text-4xl font-serif leading-none">“</div>
+
+                        {{-- comment --}}
+                        <blockquote class="text-[13px] text-slate-600 leading-relaxed -mt-1">
+                            {{ \Illuminate\Support\Str::limit($review->comment, 160) }}
+                        </blockquote>
+
+                        {{-- user + stars --}}
+                        <figcaption class="flex items-center gap-3 mt-4">
+                            @if (!empty($review->user->avatar))
+                                <img src="{{ uploaded_asset($review->user->avatar) }}" alt="{{ $review->user->name }}"
+                                    width="44" height="44" loading="lazy" decoding="async"
+                                    class="w-11 h-11 rounded-full object-cover bg-brand-100">
+                            @else
+                                <span
+                                    class="w-11 h-11 rounded-full bg-brand-100 text-brand-700 grid place-items-center font-semibold text-base">
+                                    {{ strtoupper(mb_substr($review->user->name ?? 'N', 0, 1)) }}
+                                </span>
+                            @endif
+
+                            <span class="min-w-0">
+                                <b class="block text-sm text-slate-900 truncate">
+                                    {{ $review->user->name ?? 'NexioMart Customer' }}
+                                </b>
+
+                                <span class="text-star flex items-center gap-0.5 mt-0.5"
+                                    aria-label="{{ $review->rating }} out of 5 stars">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                            fill="{{ $i <= $review->rating ? 'currentColor' : 'none' }}"
+                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                            stroke-linejoin="round" aria-hidden="true">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
+                                    @endfor
+                                </span>
+                            </span>
+                        </figcaption>
+                    </figure>
+                @endforeach
+            </div>
+        @endif
+    </section>
+
+
 
     {{-- ============================================================
          NEWSLETTER

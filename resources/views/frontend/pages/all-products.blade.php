@@ -69,13 +69,20 @@
 
             {{-- Max Price --}}
             <div class="card p-5">
-                <h3 class="font-semibold text-slate-900 mb-3 text-sm">Max Price</h3>
-                <input id="priceRange" name="max_price" type="range" min="200" max="15000" step="100"
-                    value="{{ request('max_price', 15000) }}" class="filter-input" aria-label="Maximum price">
-                <div class="flex justify-between text-xs text-slate-500 mt-1">
-                    <span>৳200</span>
-                    <b id="priceOut" class="text-brand-700">৳{{ number_format(request('max_price', 5000)) }}</b>
+                <h3 class="font-semibold text-slate-900 mb-3 text-sm">Price Range</h3>
+
+                <div id="priceSlider" class="mt-2 mb-3"></div>
+
+                <div class="flex justify-between text-xs text-slate-500">
+                    <span>Min: <b id="priceMinOut"
+                            class="text-brand-700">৳{{ number_format((float) request('min_price', 0)) }}</b></span>
+                    <span>Max: <b id="priceMaxOut"
+                            class="text-brand-700">৳{{ number_format((float) request('max_price', 15000)) }}</b></span>
                 </div>
+
+                {{-- hidden inputs — filter form এগুলো submit করবে --}}
+                <input type="hidden" name="min_price" id="minPriceInput" value="{{ request('min_price', 0) }}">
+                <input type="hidden" name="max_price" id="maxPriceInput" value="{{ request('max_price', 15000) }}">
             </div>
 
             {{-- Rating --}}
@@ -147,24 +154,54 @@
 @endsection
 
 @push('scripts')
+    {{-- noUiSlider CDN --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
+
     <script>
         (function() {
             const sortSelect = document.getElementById('sort');
-            const priceRange = document.getElementById('priceRange');
-            const priceOut = document.getElementById('priceOut');
             const resetBtn = document.getElementById('resetFilters');
             const applyBtn = document.getElementById('applyFilters');
             const baseUrl = "{{ route('frontend.all-products') }}";
 
+            const minPriceInput = document.getElementById('minPriceInput');
+            const maxPriceInput = document.getElementById('maxPriceInput');
+            const priceMinOut = document.getElementById('priceMinOut');
+            const priceMaxOut = document.getElementById('priceMaxOut');
+            const sliderEl = document.getElementById('priceSlider');
+
             let debounceTimer = null;
 
+            /* ==============================================================
+             | Slider bounds — server থেকে render করা window.PRICE_BOUNDS
+             |==============================================================*/
+            const BOUNDS = window.PRICE_BOUNDS || {
+                min: 0,
+                max: 15000,
+                step: 100,
+                currentMin: parseInt(minPriceInput?.value || 0, 10),
+                currentMax: parseInt(maxPriceInput?.value || 15000, 10),
+            };
+
+            const money = n => '৳' + Number(n).toLocaleString('en-US');
+
+            /* ==============================================================
+             | Collect params for AJAX request
+             |==============================================================*/
             function collectParams() {
                 const params = new URLSearchParams();
 
                 const cat = document.querySelector('input[name="category"]:checked');
                 if (cat && cat.value) params.set('category', cat.value);
 
-                if (priceRange) params.set('max_price', priceRange.value);
+                // min / max — hidden inputs থেকে
+                if (minPriceInput && minPriceInput.value !== '') {
+                    params.set('min_price', minPriceInput.value);
+                }
+                if (maxPriceInput && maxPriceInput.value !== '') {
+                    params.set('max_price', maxPriceInput.value);
+                }
 
                 const rating = document.querySelector('input[name="rating"]:checked');
                 if (rating) params.set('rating', rating.value);
@@ -180,11 +217,13 @@
                 return params;
             }
 
+            /* ==============================================================
+             | Load products via AJAX
+             |==============================================================*/
             function loadProducts(pushState = true) {
                 const params = collectParams();
                 const url = baseUrl + '?' + params.toString();
 
-                // Re-query every time (innerHTML may have replaced the node)
                 const box = document.getElementById('productResults');
                 if (!box) return;
 
@@ -199,7 +238,6 @@
                     })
                     .then(res => res.json())
                     .then(data => {
-                        // Guard: only replace if we actually got HTML
                         if (typeof data.html === 'string' && data.html.length > 0) {
                             box.innerHTML = data.html;
                         } else {
@@ -209,6 +247,9 @@
                         box.style.pointerEvents = 'auto';
 
                         if (pushState) history.pushState({}, '', url);
+
+                        // let wishlist hearts re-sync
+                        window.dispatchEvent(new Event('products:loaded'));
                     })
                     .catch(err => {
                         console.error(err);
@@ -222,11 +263,68 @@
                 debounceTimer = setTimeout(() => loadProducts(), 400);
             }
 
-            /* ---------- Bind filter events ---------- */
+            /* ==============================================================
+             | noUiSlider — double handle
+             |==============================================================*/
+            let sliderInstance = null;
+
+            if (sliderEl && typeof noUiSlider !== 'undefined') {
+                // Safety clamp
+                const startMin = Math.max(BOUNDS.min, Math.min(BOUNDS.currentMin, BOUNDS.max));
+                const startMax = Math.max(startMin, Math.min(BOUNDS.currentMax, BOUNDS.max));
+
+                noUiSlider.create(sliderEl, {
+                    start: [startMin, startMax],
+                    connect: true,
+                    step: BOUNDS.step,
+                    range: {
+                        min: BOUNDS.min,
+                        max: BOUNDS.max
+                    },
+                    format: {
+                        to: v => Math.round(v),
+                        from: v => Number(v),
+                    },
+                });
+
+                sliderInstance = sliderEl.noUiSlider;
+
+                let userInteracted = false;
+                sliderEl.addEventListener('pointerdown', () => {
+                    userInteracted = true;
+                });
+                sliderEl.addEventListener('touchstart', () => {
+                    userInteracted = true;
+                }, {
+                    passive: true
+                });
+
+                sliderInstance.on('update', function(values) {
+                    const [min, max] = values.map(Number);
+
+                    if (priceMinOut) priceMinOut.textContent = money(min);
+                    if (priceMaxOut) priceMaxOut.textContent = money(max);
+
+                    if (minPriceInput) minPriceInput.value = min;
+                    if (maxPriceInput) maxPriceInput.value = max;
+                });
+
+                sliderInstance.on('change', function() {
+                    if (!userInteracted) return;
+                    loadProductsDebounced();
+                });
+            }
+
+            /* ==============================================================
+             | Other filter inputs (radio, checkbox, text, sort)
+             |==============================================================*/
             document.querySelectorAll('.filter-input').forEach(el => {
+                // skip slider related inputs — they're handled above
+                if (el === minPriceInput || el === maxPriceInput) return;
+
                 const evt = (el.type === 'range' || el.type === 'text') ? 'input' : 'change';
                 el.addEventListener(evt, () => {
-                    if (el.type === 'range') {
+                    if (el.type === 'range' || el.type === 'text') {
                         loadProductsDebounced();
                     } else {
                         loadProducts();
@@ -238,18 +336,16 @@
                 sortSelect.addEventListener('change', () => loadProducts());
             }
 
-            if (priceRange && priceOut) {
-                priceRange.addEventListener('input', () => {
-                    priceOut.textContent = '৳' + Number(priceRange.value).toLocaleString();
-                });
-            }
-
             if (applyBtn) {
                 applyBtn.addEventListener('click', () => loadProducts());
             }
 
+            /* ==============================================================
+             | Reset filters
+             |==============================================================*/
             if (resetBtn) {
                 resetBtn.addEventListener('click', () => {
+                    // radios / checkboxes
                     document.querySelectorAll('.filter-input').forEach(el => {
                         if (el.type === 'radio' || el.type === 'checkbox') el.checked = false;
                     });
@@ -257,9 +353,14 @@
                     const allCat = document.querySelector('input[name="category"][value=""]');
                     if (allCat) allCat.checked = true;
 
-                    if (priceRange) {
-                        priceRange.value = 15000;
-                        priceOut.textContent = '৳15,000';
+                    // reset slider to full range
+                    if (sliderInstance) {
+                        sliderInstance.set([BOUNDS.min, BOUNDS.max]);
+                    } else {
+                        if (minPriceInput) minPriceInput.value = BOUNDS.min;
+                        if (maxPriceInput) maxPriceInput.value = BOUNDS.max;
+                        if (priceMinOut) priceMinOut.textContent = money(BOUNDS.min);
+                        if (priceMaxOut) priceMaxOut.textContent = money(BOUNDS.max);
                     }
 
                     if (sortSelect) sortSelect.value = '';
@@ -270,9 +371,10 @@
 
             window.addEventListener('popstate', () => window.location.reload());
 
-            /* ---------- Pagination via AJAX ---------- */
+            /* ==============================================================
+             | Pagination via AJAX
+             |==============================================================*/
             document.addEventListener('click', function(e) {
-                // Laravel's default pagination renders <a> inside <nav>
                 const link = e.target.closest('#productResults nav a');
                 if (!link || !link.href) return;
 
@@ -300,6 +402,8 @@
                             behavior: 'smooth',
                             block: 'start'
                         });
+
+                        window.dispatchEvent(new Event('products:loaded'));
                     })
                     .catch(err => {
                         console.error(err);
@@ -309,16 +413,57 @@
         })();
     </script>
 
+    {{-- Variant product redirect --}}
     <script>
         document.addEventListener('click', function(e) {
             const btn = e.target.closest('[data-add]');
             if (!btn || btn.disabled) return;
             if (btn.dataset.hasVariants !== '1') return;
+
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
+
             const url = btn.dataset.detailUrl;
             if (url) window.location.href = url;
-        }, true); // capture phase = runs before other handlers
+        }, true);
     </script>
+
+    {{-- Slider CSS --}}
+    <style>
+        #priceSlider {
+            height: 6px;
+            margin: 1rem 0 1.25rem;
+        }
+
+        #priceSlider .noUi-connect {
+            background: #0A6530;
+            z-index: 10;
+        }
+
+        #priceSlider .noUi-handle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #0A6530;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+            top: -7px;
+            cursor: grab;
+            z-index: 10;
+        }
+
+        #priceSlider .noUi-handle:active {
+            cursor: grabbing;
+        }
+
+        #priceSlider .noUi-handle::before,
+        #priceSlider .noUi-handle::after {
+            display: none;
+        }
+
+        #priceSlider .noUi-touch-area {
+            cursor: grab;
+        }
+    </style>
 @endpush
