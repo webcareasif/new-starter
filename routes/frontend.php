@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Frontend\AddressController;
 use App\Http\Controllers\Frontend\FrontendController;
 use App\Http\Controllers\Frontend\ProfileController;
 use App\Http\Controllers\Frontend\WishlistController;
@@ -74,4 +75,20 @@ Route::prefix('wishlist')->name('frontend.wishlist.')->group(function () {
 
     Route::post('/wishlist/ids', [WishlistController::class, 'ids'])
         ->name('ids');
+});
+
+
+Route::middleware('auth')->group(function () {
+    // ... existing profile routes ...
+
+    Route::prefix('addresses')->name('frontend.addresses.')->group(function () {
+        Route::get('/',              [AddressController::class, 'index'])->name('index');
+        Route::get('/create',        [AddressController::class, 'create'])->name('create');
+        Route::post('/',             [AddressController::class, 'store'])->name('store');
+        Route::get('/{address}/edit', [AddressController::class, 'edit'])->name('edit');
+        Route::put('/{address}',     [AddressController::class, 'update'])->name('update');
+        Route::delete('/{address}',  [AddressController::class, 'destroy'])->name('destroy');
+        Route::patch('/{address}/toggle',  [AddressController::class, 'toggle'])->name('toggle');
+        Route::patch('/{address}/default', [AddressController::class, 'setDefault'])->name('default');
+    });
 });

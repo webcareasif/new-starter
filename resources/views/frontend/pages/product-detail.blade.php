@@ -85,23 +85,42 @@
 
         {{-- PRODUCT GALLERY --}}
         <div>
-            <div data-main class="card aspect-[4/3] overflow-hidden bg-slate-100">
+            {{-- Main preview with zoom button --}}
+            <div class="relative">
+                <div data-main class="card aspect-[4/3] overflow-hidden bg-slate-100 relative">
+                    @if ($mainImage)
+                        <img id="mainPreviewImage" src="{{ $mainImage }}" alt="{{ $productName }}"
+                            class="w-full h-full object-cover transition-opacity duration-200">
+                    @else
+                        <div class="w-full h-full grid place-items-center text-slate-400">No Image</div>
+                    @endif
+                </div>
+
                 @if ($mainImage)
-                    <img src="{{ $mainImage }}" alt="{{ $productName }}" width="400" height="400"
-                        class="w-full h-full object-cover">
-                @else
-                    <div class="w-full h-full grid place-items-center text-slate-400">No Image</div>
+                    <button type="button" id="previewZoomBtn"
+                        class="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full p-2 shadow border border-slate-200"
+                        aria-label="View full size">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                    </button>
                 @endif
             </div>
 
+            {{-- Thumbnails --}}
             @if ($images->count())
                 <div class="grid grid-cols-4 gap-3 mt-3">
                     @foreach ($images->take(4) as $image)
                         <button type="button" data-thumb data-image="{{ $image }}"
-                            class="aspect-square rounded-xl overflow-hidden border border-slate-200 hover:border-brand-600 transition {{ $loop->first ? 'border-brand-600' : '' }}"
-                            aria-label="Product view">
-                            <img src="{{ $image }}" alt="{{ $productName }}" width="400" height="400"
-                                loading="lazy" class="w-full h-full object-cover">
+                            class="aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-brand-600 transition {{ $loop->first ? 'border-brand-600' : '' }}"
+                            aria-label="Product view {{ $loop->iteration }}">
+                            <img src="{{ $image }}" alt="{{ $productName }} view {{ $loop->iteration }}"
+                                width="400" height="400" loading="lazy" class="w-full h-full object-cover">
                         </button>
                     @endforeach
                 </div>
@@ -206,16 +225,20 @@
             <div class="mt-6 flex flex-wrap items-center gap-3">
 
                 <div class="qty flex items-center border border-slate-200 rounded-[10px]">
-                    <button type="button" data-q="-1" class="w-11 h-11 grid place-items-center" aria-label="Decrease">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <button type="button" data-q="-1" class="w-11 h-11 grid place-items-center"
+                        aria-label="Decrease">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8">
                             <path d="M5 12h14" />
                         </svg>
                     </button>
                     <input id="pQty" value="1" min="1" max="{{ max(1, $productStock) }}"
                         inputmode="numeric" aria-label="Quantity"
                         class="w-10 text-center text-sm font-semibold outline-none">
-                    <button type="button" data-q="1" class="w-11 h-11 grid place-items-center" aria-label="Increase">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <button type="button" data-q="1" class="w-11 h-11 grid place-items-center"
+                        aria-label="Increase">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8">
                             <path d="M5 12h14" />
                             <path d="M12 5v14" />
                         </svg>
@@ -330,7 +353,7 @@
         <div id="ptabs" class="pt-6 max-w-3xl">
 
             {{-- DESCRIPTION --}}
-            <div data-panel="d" class="active text-[14px] text-slate-600 leading-[1.85]">
+            <div data-panel="d" class="active text-[14px] text-slate-600 leading-[1.85] break-words">
                 @if ($description)
                     <div>{!! $description !!}</div>
                 @elseif($shortDescription)
@@ -349,67 +372,137 @@
 
             {{-- SPECIFICATIONS --}}
             <div data-panel="s">
-                <table class="w-full text-[14px]">
-                    <tbody>
-                        <tr class="border-b border-slate-100">
-                            <td class="py-3 pr-6 w-48 text-slate-500">Product</td>
-                            <td class="py-3 font-medium text-slate-800">{{ $productName }}</td>
-                        </tr>
-                        <tr class="border-b border-slate-100">
-                            <td class="py-3 pr-6 text-slate-500">SKU</td>
-                            <td class="py-3 font-medium text-slate-800">{{ $sku }}</td>
-                        </tr>
-                        <tr class="border-b border-slate-100">
-                            <td class="py-3 pr-6 text-slate-500">Category</td>
-                            <td class="py-3 font-medium text-slate-800">{{ $categoryName }}</td>
-                        </tr>
-                        @if ($brandName)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[14px] min-w-[480px]">
+                        <tbody>
                             <tr class="border-b border-slate-100">
-                                <td class="py-3 pr-6 text-slate-500">Brand</td>
-                                <td class="py-3 font-medium text-slate-800">{{ $brandName }}</td>
+                                <td class="py-3 pr-6 w-48 text-slate-500">Product</td>
+                                <td class="py-3 font-medium text-slate-800">{{ $productName }}</td>
                             </tr>
-                        @endif
+                            <tr class="border-b border-slate-100">
+                                <td class="py-3 pr-6 text-slate-500">SKU</td>
+                                <td class="py-3 font-medium text-slate-800">{{ $sku }}</td>
+                            </tr>
+                            <tr class="border-b border-slate-100">
+                                <td class="py-3 pr-6 text-slate-500">Category</td>
+                                <td class="py-3 font-medium text-slate-800">{{ $categoryName }}</td>
+                            </tr>
+                            @if ($brandName)
+                                <tr class="border-b border-slate-100">
+                                    <td class="py-3 pr-6 text-slate-500">Brand</td>
+                                    <td class="py-3 font-medium text-slate-800">{{ $brandName }}</td>
+                                </tr>
+                            @endif
 
-                        {{-- One row per attribute (Color, Age, ...) --}}
-                        @foreach ($productAttributeGroups as $attrName => $values)
-                            <tr class="border-b border-slate-100">
-                                <td class="py-3 pr-6 text-slate-500">{{ $attrName }}</td>
-                                <td class="py-3 font-medium text-slate-800">{{ implode(', ', $values) }}</td>
-                            </tr>
-                        @endforeach
+                            @foreach ($productAttributeGroups as $attrName => $values)
+                                <tr class="border-b border-slate-100">
+                                    <td class="py-3 pr-6 text-slate-500">{{ $attrName }}</td>
+                                    <td class="py-3 font-medium text-slate-800">{{ implode(', ', $values) }}</td>
+                                </tr>
+                            @endforeach
 
-                        <tr class="border-b border-slate-100">
-                            <td class="py-3 pr-6 text-slate-500">Unit</td>
-                            <td class="py-3 font-medium text-slate-800">{{ $unit }}</td>
-                        </tr>
-                        <tr class="border-b border-slate-100">
-                            <td class="py-3 pr-6 text-slate-500">Availability</td>
-                            <td class="py-3 font-medium">
-                                @if ($productInStock)
-                                    <span class="text-brand-600">In Stock</span>
-                                @else
-                                    <span class="text-red-500">Out of Stock</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @if ($productStock > 0)
                             <tr class="border-b border-slate-100">
-                                <td class="py-3 pr-6 text-slate-500">Stock</td>
-                                <td class="py-3 font-medium text-slate-800">{{ $productStock }} {{ $unit }}</td>
+                                <td class="py-3 pr-6 text-slate-500">Unit</td>
+                                <td class="py-3 font-medium text-slate-800">{{ $unit }}</td>
                             </tr>
-                        @endif
-                        @if ($product->is_variant && count($productVariants))
                             <tr class="border-b border-slate-100">
-                                <td class="py-3 pr-6 text-slate-500">Variants</td>
-                                <td class="py-3 font-medium text-slate-800">{{ count($productVariants) }} available</td>
+                                <td class="py-3 pr-6 text-slate-500">Availability</td>
+                                <td class="py-3 font-medium">
+                                    @if ($productInStock)
+                                        <span class="text-brand-600">In Stock</span>
+                                    @else
+                                        <span class="text-red-500">Out of Stock</span>
+                                    @endif
+                                </td>
                             </tr>
-                        @endif
-                    </tbody>
-                </table>
+                            @if ($productStock > 0)
+                                <tr class="border-b border-slate-100">
+                                    <td class="py-3 pr-6 text-slate-500">Stock</td>
+                                    <td class="py-3 font-medium text-slate-800">{{ $productStock }} {{ $unit }}
+                                    </td>
+                                </tr>
+                            @endif
+                            @if ($product->is_variant && count($productVariants))
+                                <tr class="border-b border-slate-100">
+                                    <td class="py-3 pr-6 text-slate-500">Variants</td>
+                                    <td class="py-3 font-medium text-slate-800">{{ count($productVariants) }} available
+                                    </td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {{-- REVIEWS --}}
             <div data-panel="r">
+                @php
+                    // Build rating breakdown: 5 → 1
+                    $ratingBreakdown = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+                    foreach ($productReviews as $r) {
+                        $star = (int) ($r->rating ?? 0);
+                        if ($star >= 1 && $star <= 5) {
+                            $ratingBreakdown[$star]++;
+                        }
+                    }
+                    $maxCount = max(1, max($ratingBreakdown)); // avoid division by zero
+                @endphp
+
+                {{-- Rating summary (matches screenshot) --}}
+                <div
+                    class="mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-white border border-slate-100 rounded-2xl p-5 sm:p-6">
+
+                    {{-- LEFT: Big average + stars + count --}}
+                    <div class="shrink-0 w-full sm:w-32 text-center sm:text-center">
+                        <div class="text-5xl font-bold text-slate-900 leading-none">
+                            {{-- ✅ FIXED: was number_format($productAverageRating, 0) which showed 4 for 4.1 --}}
+                            {{ number_format($productAverageRating, 1) }}
+                        </div>
+                        <div class="inline-flex text-star mt-2">
+                            @for ($i = 1; $i <= 5; $i++)
+                                <svg class="w-4 h-4" viewBox="0 0 24 24"
+                                    fill="{{ $i <= round($productAverageRating) ? 'currentColor' : 'none' }}"
+                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <polygon
+                                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                            @endfor
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">
+                            {{ $productReviewCount }} review{{ $productReviewCount === 1 ? '' : 's' }}
+                        </div>
+                    </div>
+
+                    {{-- RIGHT: Star breakdown bars --}}
+                    <div class="flex-1 w-full space-y-1.5">
+                        @for ($star = 5; $star >= 1; $star--)
+                            @php
+                                $count = $ratingBreakdown[$star];
+                                $percent = ($count / $maxCount) * 100;
+                            @endphp
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="w-3 text-slate-500 text-right">{{ $star }}</span>
+
+                                <svg class="w-3.5 h-3.5 text-star shrink-0" viewBox="0 0 24 24" fill="currentColor"
+                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <polygon
+                                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+
+                                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-[#f59e0b] rounded-full transition-all duration-500"
+                                        style="width: {{ $percent }}%"></div>
+                                </div>
+
+                                <span class="w-6 text-right text-slate-500 tabular-nums">{{ $count }}</span>
+                            </div>
+                        @endfor
+                    </div>
+                </div>
+
+                {{-- Individual reviews --}}
                 @if ($productReviewCount > 0)
                     @foreach ($productReviews as $review)
                         @php
@@ -566,25 +659,99 @@
     @endif
 
     {{-- ============================================================
+         LIGHTBOX (image preview)
+    ============================================================ --}}
+    <div id="previewLightbox" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center p-4">
+        <button type="button" id="previewCloseBtn"
+            class="absolute top-4 right-4 text-white/80 hover:text-white text-3xl leading-none"
+            aria-label="Close preview">&times;</button>
+        <img id="previewLightboxImage" src="" alt="{{ $productName }}"
+            class="max-w-full max-h-full object-contain">
+    </div>
+
+    {{-- ============================================================
          PAGE JAVASCRIPT
     ============================================================ --}}
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
 
-                /* ---------------- Product Gallery ---------------- */
+                /* ---------------- Product Gallery (with preview) ---------------- */
                 const mainImage = document.querySelector('[data-main] img');
-                document.querySelectorAll('[data-thumb]').forEach(function(thumb) {
+                const thumbs = document.querySelectorAll('[data-thumb]');
+                const lightbox = document.getElementById('previewLightbox');
+                const lbImage = document.getElementById('previewLightboxImage');
+                const closeBtn = document.getElementById('previewCloseBtn');
+                const zoomBtn = document.getElementById('previewZoomBtn');
+
+                // Preload thumbnails for instant swaps
+                thumbs.forEach(function(thumb) {
+                    const img = new Image();
+                    img.src = thumb.dataset.image;
+                });
+
+                thumbs.forEach(function(thumb) {
                     thumb.addEventListener('click', function() {
                         const image = this.dataset.image;
-                        if (mainImage && image) mainImage.src = image;
-                        document.querySelectorAll('[data-thumb]').forEach(function(item) {
+                        if (!mainImage || !image) return;
+
+                        // Fade out → swap → fade in
+                        mainImage.style.opacity = '0';
+                        setTimeout(function() {
+                            mainImage.src = image;
+                            mainImage.onload = function() {
+                                mainImage.style.opacity = '1';
+                            };
+                            setTimeout(function() {
+                                mainImage.style.opacity = '1';
+                            }, 50);
+                        }, 150);
+
+                        thumbs.forEach(function(item) {
                             item.classList.remove('border-brand-600');
                             item.classList.add('border-slate-200');
                         });
                         this.classList.remove('border-slate-200');
                         this.classList.add('border-brand-600');
                     });
+                });
+
+                // Lightbox open/close
+                function openLightbox(src) {
+                    if (!lightbox || !lbImage || !src) return;
+                    lbImage.src = src;
+                    lightbox.classList.remove('hidden');
+                    lightbox.classList.add('flex');
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function closeLightbox() {
+                    if (!lightbox) return;
+                    lightbox.classList.add('hidden');
+                    lightbox.classList.remove('flex');
+                    if (lbImage) lbImage.src = '';
+                    document.body.style.overflow = '';
+                }
+
+                if (mainImage) {
+                    mainImage.style.cursor = 'zoom-in';
+                    mainImage.addEventListener('click', function() {
+                        openLightbox(mainImage.src);
+                    });
+                }
+                if (zoomBtn) {
+                    zoomBtn.addEventListener('click', function() {
+                        if (mainImage) openLightbox(mainImage.src);
+                    });
+                }
+                if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+                if (lightbox) {
+                    lightbox.addEventListener('click', function(e) {
+                        if (e.target === lightbox) closeLightbox();
+                    });
+                }
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') closeLightbox();
                 });
 
                 /* ---------------- Quantity ---------------- */

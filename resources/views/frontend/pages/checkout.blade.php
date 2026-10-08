@@ -14,46 +14,120 @@
             <form id="checkoutForm" class="lg:col-span-2 card p-5 space-y-5" novalidate>
                 <h2 class="font-semibold text-lg">Delivery Information</h2>
 
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="label mb-1 block" for="coName">Full Name *</label>
-                        <input id="coName" name="name" type="text" required maxlength="100"
-                            value="{{ auth()->user()->name ?? '' }}"
-                            class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-600">
-                    </div>
-                    <div>
-                        <label class="label mb-1 block" for="coPhone">Mobile Number *</label>
-                        <input id="coPhone" name="phone" type="tel" required placeholder="01XXXXXXXXX"
-                            value="{{ auth()->user()->phone ?? '' }}"
-                            class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-600">
-                    </div>
-                </div>
+                {{-- ========== SAVED ADDRESSES PICKER ========== --}}
+                @auth
+                    @if ($addresses->isNotEmpty())
+                        <div id="addressPickerWrap">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="label">Saved Addresses</p>
+                                <a href="{{ route('frontend.addresses.index') }}"
+                                    class="text-xs text-brand-600 hover:underline">
+                                    Manage addresses
+                                </a>
+                            </div>
 
-                <div>
-                    <label class="label mb-1 block" for="coAddress">Full Address *</label>
-                    <textarea id="coAddress" name="address" rows="3" required maxlength="500"
-                        placeholder="House, road, area, district"
-                        class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-600"></textarea>
-                </div>
+                            <div class="grid sm:grid-cols-2 gap-3">
+                                @foreach ($addresses as $address)
+                                    @php
+                                        $isChecked = $defaultAddress && $defaultAddress->id === $address->id;
+                                    @endphp
+                                    <label
+                                        class="block border border-slate-200 rounded-lg px-4 py-3 cursor-pointer text-sm has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                                        <div class="flex items-start gap-2">
+                                            <input type="radio" name="address_id" value="{{ $address->id }}"
+                                                data-name="{{ $address->name }}" data-phone="{{ $address->phone }}"
+                                                data-address="{{ $address->address }}" data-area="{{ $address->area }}"
+                                                {{ $isChecked ? 'checked' : '' }}>
+                                            <div class="min-w-0">
+                                                <p class="font-medium text-slate-900 flex items-center gap-1.5 flex-wrap">
+                                                    {{ $address->label }}
+                                                    @if ($address->is_default)
+                                                        <span
+                                                            class="text-[10px] bg-brand-100 text-brand-700 rounded-full px-1.5 py-0.5">Default</span>
+                                                    @endif
+                                                </p>
+                                                <p class="text-slate-700">{{ $address->name }} · {{ $address->phone }}</p>
+                                                <p class="text-slate-500 text-xs mt-0.5">{{ $address->address }}</p>
+                                                <p class="text-slate-400 text-xs mt-0.5">
+                                                    {{ $address->area === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka' }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </label>
+                                @endforeach
 
-                <div>
-                    <p class="label mb-2">Delivery Area *</p>
-                    <div class="grid sm:grid-cols-2 gap-3">
-                        <label
-                            class="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 cursor-pointer has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
-                            <span class="flex items-center gap-2 text-sm">
-                                <input type="radio" name="area" value="inside" checked> Inside Dhaka
-                            </span>
-                            <b class="text-sm">৳{{ $shipping['inside'] }}</b>
-                        </label>
-                        <label
-                            class="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 cursor-pointer has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
-                            <span class="flex items-center gap-2 text-sm">
-                                <input type="radio" name="area" value="outside"> Outside Dhaka
-                            </span>
-                            <b class="text-sm">৳{{ $shipping['outside'] }}</b>
-                        </label>
+                                {{-- Manual entry option --}}
+                                <label
+                                    class="block border border-slate-200 rounded-lg px-4 py-3 cursor-pointer text-sm has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                                    <div class="flex items-start gap-2">
+                                        <input type="radio" name="address_id" value=""
+                                            {{ !$defaultAddress ? 'checked' : '' }}>
+                                        <div>
+                                            <p class="font-medium text-slate-900">Enter a new address</p>
+                                            <p class="text-slate-500 text-xs mt-0.5">Fill in the details below</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <hr class="my-5 border-slate-100">
+                        </div>
+                    @endif
+                @endauth
+
+                {{-- ========== MANUAL ADDRESS FIELDS ========== --}}
+                <div id="manualAddress" class="space-y-5">
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="label mb-1 block" for="coName">Full Name *</label>
+                            <input id="coName" name="name" type="text" required maxlength="100"
+                                value="{{ auth()->user()->name ?? '' }}"
+                                class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-600">
+                        </div>
+                        <div>
+                            <label class="label mb-1 block" for="coPhone">Mobile Number *</label>
+                            <input id="coPhone" name="phone" type="tel" required placeholder="01XXXXXXXXX"
+                                value="{{ auth()->user()->phone ?? '' }}"
+                                class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-600">
+                        </div>
                     </div>
+
+                    <div>
+                        <label class="label mb-1 block" for="coAddress">Full Address *</label>
+                        <textarea id="coAddress" name="address" rows="3" required maxlength="500"
+                            placeholder="House, road, area, district"
+                            class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-brand-600"></textarea>
+                    </div>
+
+                    <div>
+                        <p class="label mb-2">Delivery Area *</p>
+                        <div class="grid sm:grid-cols-2 gap-3">
+                            <label
+                                class="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 cursor-pointer has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                                <span class="flex items-center gap-2 text-sm">
+                                    <input type="radio" name="area" value="inside" checked> Inside Dhaka
+                                </span>
+                                <b class="text-sm">৳{{ $shipping['inside'] }}</b>
+                            </label>
+                            <label
+                                class="flex items-center justify-between border border-slate-200 rounded-lg px-4 py-3 cursor-pointer has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50">
+                                <span class="flex items-center gap-2 text-sm">
+                                    <input type="radio" name="area" value="outside"> Outside Dhaka
+                                </span>
+                                <b class="text-sm">৳{{ $shipping['outside'] }}</b>
+                            </label>
+                        </div>
+                    </div>
+
+                    {{-- Save-address checkbox (only when user has no addresses yet) --}}
+                    @auth
+                        @if ($addresses->isEmpty())
+                            <label class="flex items-center gap-2 text-sm text-slate-700">
+                                <input type="checkbox" name="save_address" value="1" checked>
+                                Save this address to my account for next time
+                            </label>
+                        @endif
+                    @endauth
                 </div>
 
                 <div>
@@ -76,11 +150,11 @@
                 <h2 class="font-semibold text-lg mb-4">Your Order</h2>
                 <ul id="coLines" class="divide-y divide-slate-100 text-sm mb-4"></ul>
 
-                {{-- Coupon --}}
                 <div class="mb-4 pt-4 border-t border-slate-100">
                     <label class="label mb-1.5 block" for="couponInput">Have a coupon?</label>
                     <div class="flex gap-2">
-                        <input id="couponInput" type="text" maxlength="50" placeholder="Enter code" autocomplete="off"
+                        <input id="couponInput" type="text" maxlength="50" placeholder="Enter code"
+                            autocomplete="off"
                             class="flex-1 min-w-0 border border-slate-200 rounded-lg px-3 py-2 text-sm uppercase outline-none focus:border-brand-600 disabled:bg-slate-50 disabled:text-slate-500">
                         <button id="couponBtn" type="button" class="btn btn-outline !py-2 !px-4 text-sm">Apply</button>
                     </div>
@@ -88,12 +162,14 @@
                 </div>
 
                 <div class="space-y-2 text-sm border-t border-slate-100 pt-4">
-                    <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><b id="coSub">৳0</b>
+                    <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><b
+                            id="coSub">৳0</b>
                     </div>
                     <div id="coDiscRow" class="flex justify-between text-brand-700" style="display:none">
                         <span id="coDiscLabel">Coupon discount</span><b id="coDisc">-৳0</b>
                     </div>
-                    <div class="flex justify-between"><span class="text-slate-500">Delivery</span><b id="coShip">৳0</b>
+                    <div class="flex justify-between"><span class="text-slate-500">Delivery</span><b
+                            id="coShip">৳0</b>
                     </div>
                     <div class="flex justify-between text-base pt-2 border-t border-slate-100">
                         <span class="font-semibold">Total</span><b id="coTotal" class="text-brand-700">৳0</b>
@@ -117,7 +193,7 @@
                 const PLACE_URL = @json(route('frontend.checkout.place'));
                 const CART_URL = @json(route('frontend.cart'));
                 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
-                const CHECKOUT_KEY = 'nexio_checkout'; // keys chosen on the cart page
+                const CHECKOUT_KEY = 'nexio_checkout';
                 const UNSEL_KEY = 'nexio_unselected';
                 const COUPON_KEY = 'nexio_coupon';
 
@@ -126,6 +202,7 @@
                 const couponInput = document.getElementById('couponInput');
                 const couponBtn = document.getElementById('couponBtn');
                 const couponMsg = document.getElementById('couponMsg');
+                const manualBox = document.getElementById('manualAddress');
 
                 const money = n => '৳' + Number(n).toLocaleString('en-US');
                 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({
@@ -135,14 +212,26 @@
                     '"': '&quot;',
                     "'": '&#39;'
                 } [c]));
-                const area = () => form.querySelector('[name="area"]:checked').value;
+
+                /** Safely get the currently selected delivery area. */
+                const area = () => {
+                    const checked = form.querySelector('[name="area"]:checked');
+                    return checked ? checked.value : 'inside';
+                };
+
                 const getCoupon = () => localStorage.getItem(COUPON_KEY) || '';
 
-                /* ---------- Which cart items are being checked out? ---------- */
+                /** Returns the currently selected saved-address ID, or null. */
+                const selectedAddressId = () => {
+                    const el = form.querySelector('[name="address_id"]:checked');
+                    return el && el.value ? el.value : null;
+                };
+
+                /* ---------- Cart selection ---------- */
                 function selectedKeys() {
                     try {
                         const raw = sessionStorage.getItem(CHECKOUT_KEY);
-                        return raw ? JSON.parse(raw) : null; // null = everything in the cart
+                        return raw ? JSON.parse(raw) : null;
                     } catch (e) {
                         return null;
                     }
@@ -181,7 +270,7 @@
                 }
 
                 couponBtn.addEventListener('click', async function() {
-                    if (getCoupon()) { // Remove
+                    if (getCoupon()) {
                         localStorage.removeItem(COUPON_KEY);
                         setMsg('', true);
                         paintCouponBox();
@@ -192,7 +281,7 @@
 
                     couponBtn.disabled = true;
                     localStorage.setItem(COUPON_KEY, code);
-                    await loadSummary(); // invalid codes are cleared automatically below
+                    await loadSummary();
                     couponBtn.disabled = false;
                 });
 
@@ -242,12 +331,10 @@
                             <b class="shrink-0">${money(l.line_total)}</b>
                         </li>`).join('');
 
-                    /* Coupon result */
                     if (d.coupon) {
                         setMsg('Coupon "' + d.coupon.code + '" applied. You save ' + money(d.coupon.discount) + '.',
                             true);
                     } else if (d.coupon_error) {
-                        // A bad coupon must never block the order, so drop it and tell the customer.
                         localStorage.removeItem(COUPON_KEY);
                         setMsg(d.coupon_error + ' The coupon was removed.', false);
                     } else if (!getCoupon()) {
@@ -257,7 +344,8 @@
 
                     const discount = Number(d.discount || 0);
                     document.getElementById('coDiscRow').style.display = discount > 0 ? '' : 'none';
-                    document.getElementById('coDiscLabel').textContent = d.coupon ? 'Coupon (' + d.coupon.code + ')' :
+                    document.getElementById('coDiscLabel').textContent = d.coupon ?
+                        'Coupon (' + d.coupon.code + ')' :
                         'Coupon discount';
                     document.getElementById('coDisc').textContent = '-' + money(discount);
 
@@ -269,8 +357,45 @@
                     btn.classList.toggle('opacity-50', !hasItems);
                 }
 
+                /* ---------- Address picker behaviour ---------- */
+                function bindAddressPicker() {
+                    const radios = form.querySelectorAll('[name="address_id"]');
+                    if (!radios.length) return;
+
+                    radios.forEach(radio => {
+                        radio.addEventListener('change', () => {
+                            if (radio.value) {
+                                // ---- Saved address chosen ----
+                                manualBox.classList.add('hidden');
+                                manualBox.querySelectorAll('input, textarea, select, button')
+                                    .forEach(el => el.disabled = true);
+
+                                // Keep form values in sync as a fallback
+                                form.elements['name'].value = radio.dataset.name;
+                                form.elements['phone'].value = radio.dataset.phone;
+                                form.elements['address'].value = radio.dataset.address;
+
+                                const areaRadio = form.querySelector(
+                                    `[name="area"][value="${radio.dataset.area}"]`);
+                                if (areaRadio) areaRadio.checked = true;
+
+                                loadSummary();
+                            } else {
+                                // ---- Manual entry chosen ----
+                                manualBox.classList.remove('hidden');
+                                manualBox.querySelectorAll('input, textarea, select, button')
+                                    .forEach(el => el.disabled = false);
+                            }
+                        });
+
+                        // Fire once for the pre-checked radio on page load
+                        if (radio.checked) radio.dispatchEvent(new Event('change'));
+                    });
+                }
+
                 form.querySelectorAll('[name="area"]').forEach(r => r.addEventListener('change', loadSummary));
 
+                /* ---------- Submit ---------- */
                 form.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     showErrors([]);
@@ -278,24 +403,38 @@
                     const items = checkoutItems();
                     const el = form.elements;
 
+                    if (!items.length) {
+                        window.location.href = CART_URL;
+                        return;
+                    }
+
+                    const addressId = selectedAddressId();
+
+                    // When a saved address is chosen, manual fields are optional.
+                    if (!addressId) {
+                        const name = el['name'].value.trim();
+                        const phone = el['phone'].value.trim();
+                        const address = el['address'].value.trim();
+
+                        if (!name || !phone || !address) {
+                            return showErrors([
+                                'Please fill in your name, mobile number and address, ' +
+                                'or choose a saved address.'
+                            ]);
+                        }
+                    }
+
                     const payload = {
+                        address_id: addressId,
                         name: el['name'].value.trim(),
                         phone: el['phone'].value.trim(),
                         address: el['address'].value.trim(),
                         area: area(),
                         notes: el['notes'].value.trim(),
                         coupon: getCoupon(),
-                        items: items
+                        items: items,
+                        save_address: form.querySelector('[name="save_address"]')?.checked ? 1 : 0,
                     };
-
-                    if (!items.length) {
-                        window.location.href = CART_URL;
-                        return;
-                    }
-
-                    if (!payload.name || !payload.phone || !payload.address) {
-                        return showErrors(['Please fill in your name, mobile number and address.']);
-                    }
 
                     btn.disabled = true;
                     const original = btn.textContent;
@@ -314,7 +453,6 @@
                         const d = await res.json();
 
                         if (d.success) {
-                            /* Remove ONLY the ordered items; the rest stay in the cart */
                             const ordered = new Set(items.map(i => i.cartKey));
                             const remaining = NexioCart.getCart().filter(i => !ordered.has(i.cartKey));
                             NexioCart.saveCart(remaining);
@@ -338,6 +476,7 @@
 
                 document.addEventListener('DOMContentLoaded', function() {
                     paintCouponBox();
+                    bindAddressPicker();
                     loadSummary();
                 });
             })();

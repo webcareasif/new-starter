@@ -30,6 +30,11 @@
             Edit Profile
         </a>
 
+        <a href="{{ route('frontend.addresses.index') }}"
+            class="block px-3 py-2 rounded-lg {{ request()->routeIs('frontend.addresses.*') ? 'bg-brand-50 text-brand-700 font-medium' : 'text-slate-600 hover:bg-slate-50' }}">
+            My Addresses
+        </a>
+
         {{-- Logout trigger (no longer a form) --}}
         <div class="pt-2 mt-2 border-t border-slate-100">
             <button type="button" @click="showLogoutModal = true"

@@ -206,11 +206,11 @@ class FrontendController extends Controller
         /* ---------------- Reviews ---------------- */
         $reviews = $product->reviews ?? collect();
 
-        $reviewCount = $reviews->count();
+        $reviewCount = (int) $reviews->count();
 
         $averageRating = $reviewCount > 0
-            ? round((float) $reviews->avg('rating'), 1)
-            : 0;
+            ? (float) round((float) $reviews->avg('rating'), 1)
+            : 0.0;
 
         /* ---------------- Variants ---------------- */
         $variants = $product->variants->map(function ($variant) {
@@ -299,10 +299,10 @@ class FrontendController extends Controller
                 : 0;
 
             $relatedProduct->average_rating = $relatedProduct->reviews->count()
-                ? round((float) $relatedProduct->reviews->avg('rating'), 1)
-                : 0;
+                ? (float) round((float) $relatedProduct->reviews->avg('rating'), 1)
+                : 0.0;
 
-            $relatedProduct->review_count = $relatedProduct->reviews->count();
+            $relatedProduct->review_count = (int) $relatedProduct->reviews->count();
 
             $relatedProduct->thumbnail_url = $relatedProduct->thumbnail
                 ? uploaded_asset($relatedProduct->thumbnail)
@@ -596,7 +596,7 @@ class FrontendController extends Controller
         return view('frontend.pages.cart');
     }
 
-    public function checkout()
+    public function checkout1()
     {
         $shippingCosts = ShippingCost::where('status', '1')->get();
 
@@ -613,6 +613,34 @@ class FrontendController extends Controller
         return view('frontend.pages.checkout', [
             'shipping' => $shipping,
             'shippingCosts' => $shippingCosts, // full collection if you need IDs/labels
+        ]);
+    }
+
+
+    public function checkout()
+    {
+        $shippingCosts = ShippingCost::where('status', '1')->get();
+
+        $shipping = [];
+        foreach ($shippingCosts as $cost) {
+            if (stripos($cost->name, 'inside') !== false) {
+                $shipping['inside'] = (float) $cost->amount;
+            } elseif (stripos($cost->name, 'outside') !== false) {
+                $shipping['outside'] = (float) $cost->amount;
+            }
+        }
+
+        $addresses = auth()->check()
+            ? auth()->user()->addresses()->active()->orderByDesc('is_default')->latest()->get()
+            : collect();
+
+        $defaultAddress = $addresses->firstWhere('is_default', true) ?? $addresses->first();
+
+        return view('frontend.pages.checkout', [
+            'shipping'       => $shipping,
+            'shippingCosts'  => $shippingCosts,
+            'addresses'      => $addresses,
+            'defaultAddress' => $defaultAddress,
         ]);
     }
 

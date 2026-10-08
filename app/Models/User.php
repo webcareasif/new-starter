@@ -81,4 +81,18 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Wishlist::class, 'user_id');
     }
+
+    public function addresses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\UserAddress::class);
+    }
+
+    public function defaultAddress(): ?\App\Models\UserAddress
+    {
+        return $this->addresses()
+            ->where('is_active', true)
+            ->orderByDesc('is_default')
+            ->orderByDesc('updated_at')
+            ->first();
+    }
 }
