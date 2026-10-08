@@ -5,13 +5,11 @@
     <label class="sr-only" for="{{ $inputId }}">Search products</label>
 
     <input id="{{ $inputId }}" name="q" type="search" value="{{ request('q') }}"
-        placeholder="Search for products…" enterkeyhint="search" data-search-input role="combobox" aria-expanded="false"
+        placeholder="Search for products..." data-search-input role="combobox" aria-expanded="false"
         aria-controls="{{ $inputId }}-list" aria-autocomplete="list"
-        class="field min-w-0 flex-1 !rounded-r-none {{ $inputClass ?? '' }}">
+        class="field !rounded-r-none {{ $inputClass ?? '' }}">
 
-    <button type="submit"
-        class="shrink-0 bg-brand-600 hover:bg-brand-700 text-white px-4 rounded-r-[10px] focus-visible:outline-offset-0"
-        aria-label="Search">
+    <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white px-4 rounded-r-[10px]" aria-label="Search">
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="8" />
@@ -20,6 +18,6 @@
     </button>
 
     <div id="{{ $inputId }}-list" data-search-dropdown role="listbox"
-        class="hidden absolute left-0 right-0 top-full mt-2 max-h-[70vh] overflow-y-auto bg-white border border-slate-100 rounded-xl shadow-xl z-50">
+        class="hidden absolute left-0 right-0 top-full mt-2 bg-white border border-slate-100 rounded-xl shadow-xl overflow-hidden z-50">
     </div>
 </form>

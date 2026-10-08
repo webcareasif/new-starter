@@ -78,6 +78,8 @@
         @yield('content')
     </main>
     @include('frontend.partials.footer')
+    @include('frontend.partials.mobile-bottom-nav')
+
     <div id="cartOverlay" data-cart-close class="fixed inset-0 bg-black/50 z-[70]"></div>
     <aside id="cartDrawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle"
         class="fixed top-0 right-0 bottom-0 w-full max-w-[420px] bg-white z-[80] flex flex-col shadow-2xl">

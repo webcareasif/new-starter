@@ -2,18 +2,17 @@
 
 @section('content')
     {{-- ================= Header + Search ================= --}}
-    <section class="bg-white border-b border-slate-200/80 shadow-sm">
-        <div class="container max-w-2xl mx-auto px-4 sm:px-6 py-10 md:py-14">
+    <section class="bg-slate-50 border-b border-slate-200">
+        <div class="container-fluid max-w-2xl mx-auto py-10 md:py-14">
 
             <nav class="text-sm text-slate-500 flex items-center gap-1.5" aria-label="Breadcrumb">
-                <a href="{{ url('/') }}"
-                    class="hover:text-brand-700 focus-visible:outline-none focus-visible:underline transition">Home</a>
+                <a href="{{ url('/') }}" class="hover:text-brand-700 focus-visible:underline">Home</a>
                 <span class="text-slate-300" aria-hidden="true">/</span>
                 <span class="text-slate-800 font-medium" aria-current="page">Track order</span>
             </nav>
 
             <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mt-5">Where is my order?</h1>
-            <p class="text-slate-600 mt-2 text-base md:text-lg">
+            <p class="text-slate-600 mt-2">
                 Enter the code from your confirmation SMS or email to see the latest delivery status.
             </p>
 
@@ -28,7 +27,7 @@
                             spellcheck="false" required
                             class="w-full h-12 rounded-xl border border-slate-300 bg-white px-4 {{ !empty($orderId) ? 'pr-12' : '' }}
                                    text-base tracking-wide text-slate-900 placeholder:text-slate-400
-                                   focus:border-brand-600 focus:ring-4 focus:ring-brand-100 outline-none transition shadow-sm">
+                                   focus:border-brand-600 focus:ring-4 focus:ring-brand-100 outline-none transition">
 
                         @if (!empty($orderId))
                             <a href="{{ route('frontend.track.order') }}"
@@ -44,8 +43,8 @@
                     </div>
 
                     <button type="submit"
-                        class="inline-flex items-center justify-center h-12 px-7 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700
-                               focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-200 shadow-sm transition">
+                        class="btn btn-primary h-12 px-7 rounded-xl font-semibold justify-center
+                               focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-200">
                         Track order
                     </button>
                 </div>
@@ -54,7 +53,7 @@
     </section>
 
     {{-- ================= Results ================= --}}
-    <section class="container max-w-2xl mx-auto px-4 sm:px-6 pt-8 pb-20">
+    <section class="container-fluid max-w-2xl mx-auto pt-8 pb-20">
         @if ($searched)
             @if ($order)
                 @php
@@ -109,18 +108,16 @@
                     };
                 @endphp
 
-                <article
-                    class="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden transition hover:shadow-lg">
+                <article class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
 
                     {{-- Order summary --}}
-                    <header
-                        class="p-6 md:p-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4 border-b border-slate-100/80">
+                    <header class="p-6 md:p-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
                         <div class="min-w-0">
                             <p class="text-sm text-slate-500">Order code</p>
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <h2 class="text-xl font-semibold text-slate-900 break-all">{{ $order->code }}</h2>
                                 <button type="button"
-                                    class="js-copy-code -m-1 p-1.5 rounded-md text-slate-400 hover:text-brand-700 hover:bg-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+                                    class="js-copy-code -m-1 p-1.5 rounded-md text-slate-400 hover:text-brand-700 hover:bg-slate-100 transition"
                                     data-code="{{ $order->code }}" aria-label="Copy order code">
                                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
@@ -144,7 +141,7 @@
                     </header>
 
                     {{-- Status badges --}}
-                    <div class="px-6 md:px-8 py-4 flex flex-wrap items-center gap-2 border-b border-slate-100/80">
+                    <div class="px-6 md:px-8 pb-6 flex flex-wrap items-center gap-2">
                         <span
                             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ring-1 ring-inset {{ $statusClass }}">
                             <span class="w-1.5 h-1.5 rounded-full bg-current" aria-hidden="true"></span>
@@ -161,8 +158,7 @@
                     </div>
 
                     {{-- ================= Delivery progress ================= --}}
-                    <section class="px-6 md:px-8 py-8 border-b border-slate-100/80"
-                        aria-labelledby="delivery-progress-title">
+                    <section class="px-6 md:px-8 py-8 border-t border-slate-100" aria-labelledby="delivery-progress-title">
                         <div class="flex items-start justify-between gap-4 mb-8">
                             <div class="min-w-0">
                                 <h3 id="delivery-progress-title" class="text-base font-semibold text-slate-900">
@@ -215,7 +211,7 @@
                                         };
                                     @endphp
 
-                                    <li class="step-item flex md:flex-col items-center md:text-center gap-4 md:gap-0 p-2 md:p-0"
+                                    <li class="flex md:flex-col items-center md:text-center gap-4 md:gap-0"
                                         @if ($isActive) aria-current="step" @endif>
 
                                         <div
@@ -265,7 +261,7 @@
                     </section>
 
                     {{-- ================= Shipping details ================= --}}
-                    <section class="px-6 md:px-8 py-8 border-b border-slate-100/80" aria-labelledby="shipping-title">
+                    <section class="px-6 md:px-8 py-8 border-t border-slate-100" aria-labelledby="shipping-title">
                         <h3 id="shipping-title" class="text-base font-semibold text-slate-900 mb-5">Shipping details</h3>
 
                         <dl class="grid sm:grid-cols-2 gap-x-8 gap-y-5 text-sm">
@@ -296,7 +292,7 @@
                                     <dd class="font-medium text-slate-900 mt-0.5 flex items-center gap-1.5">
                                         {{ $order->courier_tracking_code }}
                                         <button type="button"
-                                            class="js-copy-code -m-1 p-1.5 rounded-md text-slate-400 hover:text-brand-700 hover:bg-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+                                            class="js-copy-code -m-1 p-1.5 rounded-md text-slate-400 hover:text-brand-700 hover:bg-slate-100 transition"
                                             data-code="{{ $order->courier_tracking_code }}"
                                             aria-label="Copy tracking code">
                                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none"
@@ -321,7 +317,7 @@
 
                     {{-- ================= Footer ================= --}}
                     <footer
-                        class="px-6 md:px-8 py-4 bg-slate-50/80 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500">
+                        class="px-6 md:px-8 py-4 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500">
                         <span>
                             Last updated
                             <span
@@ -329,15 +325,14 @@
                         </span>
                         <span>
                             Need help?
-                            <a href="{{ url('/contact-us') }}"
-                                class="font-medium text-brand-700 hover:underline transition">Contact us</a>
+                            <a href="{{ url('/contact-us') }}" class="font-medium text-brand-700 hover:underline">Contact
+                                us</a>
                         </span>
                     </footer>
                 </article>
             @else
                 {{-- Empty state --}}
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 md:p-10 text-center"
-                    role="status">
+                <div class="bg-white rounded-2xl border border-slate-200 p-8 md:p-10 text-center" role="status">
                     <div class="mx-auto w-14 h-14 rounded-full bg-amber-50 text-amber-600 grid place-items-center mb-4">
                         <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -349,8 +344,8 @@
                     <h2 class="text-lg font-semibold text-slate-900">No order found</h2>
                     <p class="text-slate-600 mt-2 max-w-md mx-auto">
                         Nothing matches that code or phone number. Check for typos, or
-                        <a href="{{ url('/contact-us') }}"
-                            class="font-medium text-brand-700 hover:underline transition">contact us</a>
+                        <a href="{{ url('/contact-us') }}" class="font-medium text-brand-700 hover:underline">contact
+                            us</a>
                         and we'll help you find it.
                     </p>
                 </div>
@@ -394,40 +389,4 @@
             }, 1200);
         });
     </script>
-@endpush
-
-@push('styles')
-    <style>
-        /* subtle motion-safe transitions */
-        .motion-reduce\:transition-none {
-            transition: none;
-        }
-
-        .animate-ping {
-            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-        }
-
-        @keyframes ping {
-
-            75%,
-            100% {
-                transform: scale(1.8);
-                opacity: 0;
-            }
-        }
-
-        /* improved step hover */
-        .step-item {
-            transition: background 0.2s, transform 0.1s;
-            border-radius: 12px;
-        }
-
-        .step-item:hover {
-            background: #f8fafc;
-        }
-
-        .step-item:active {
-            transform: scale(0.99);
-        }
-    </style>
 @endpush
