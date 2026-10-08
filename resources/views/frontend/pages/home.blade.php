@@ -171,7 +171,7 @@
                         <circle cx="7" cy="18" r="2" />
                     </svg></span>
                 <div>
-                    <p class="text-[13px] font-semibold text-slate-800">Free Delivery</p>
+                    <p class="text-[13px] font-semibold text-slate-800">First Delivery</p>
                     <p class="text-[11px] text-slate-500">All Over Bangladesh</p>
                 </div>
             </div>

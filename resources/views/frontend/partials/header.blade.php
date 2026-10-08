@@ -143,6 +143,11 @@
                     Contact Us
                 </a>
 
+                <a href="{{ route('frontend.about-us') }}"
+                    class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.about-us') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
+                    About Us
+                </a>
+
 
 
                 <a href="{{ route('frontend.track.order') }}"
