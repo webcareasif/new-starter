@@ -12,6 +12,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
     <script>
         tailwind.config = {
             theme: {
@@ -111,6 +116,7 @@
         </div>
     </aside>
     <script src="{{ asset('frontend/assets/js/main.js') }}"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script>
         (function() {

@@ -123,36 +123,26 @@
                     </div>
                 </div>
             @endif
-            <nav class="flex items-center gap-7 justify-center" aria-label="Main" style="align-content: center">
-                <a href="{{ route('frontend.home') }}"
-                    class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.home') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
-                    Home
-                </a>
+            @php
+                $navItems = [
+                    ['route' => 'frontend.home', 'label' => 'Home'],
+                    ['route' => 'frontend.all-products', 'label' => 'Products'],
+                    ['route' => 'frontend.blogs', 'label' => 'Blogs'],
+                    ['route' => 'frontend.track.order', 'label' => 'Track Order'],
+                    ['route' => 'frontend.refund', 'label' => 'Return Process'],
+                    ['route' => 'frontend.about-us', 'label' => 'About Us'],
+                    ['route' => 'frontend.contact-us', 'label' => 'Contact Us'],
+                ];
+            @endphp
 
-                <a href="{{ route('frontend.all-products') }}"
-                    class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.all-products') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
-                    Products
-                </a>
-                <a href="{{ route('frontend.blogs') }}"
-                    class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.blogs') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
-                    Blogs
-                </a>
-
-                <a href="{{ route('frontend.contact-us') }}"
-                    class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.contact-us') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
-                    Contact Us
-                </a>
-
-                <a href="{{ route('frontend.about-us') }}"
-                    class="py-3 text-[13px] font-medium {{ request()->routeIs('frontend.about-us') ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
-                    About Us
-                </a>
-
-
-
-                <a href="{{ route('frontend.track.order') }}"
-                    class="py-3 text-[13px] font-medium text-slate-700 hover:text-brand-600">Track Order
-                </a>
+            <nav class="flex items-center gap-7 justify-center" aria-label="Main">
+                @foreach ($navItems as $item)
+                    <a href="{{ route($item['route']) }}" @if (request()->routeIs($item['route'])) aria-current="page" @endif
+                        class="py-3 text-[13px] font-medium transition-colors
+                  {{ request()->routeIs($item['route']) ? 'text-brand-600' : 'text-slate-700 hover:text-brand-600' }}">
+                        {{ $item['label'] }}
+                    </a>
+                @endforeach
             </nav>
 
             <a href="tel:01316690209" class="ml-auto text-[12px] flex items-center gap-2 text-slate-600"><span

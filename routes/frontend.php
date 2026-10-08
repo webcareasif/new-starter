@@ -12,6 +12,9 @@ Route::get('/product/{slug}', [FrontendController::class, 'productDetail'])->nam
 
 Route::get('/contact-us', [FrontendController::class, 'contactUs'])->name('frontend.contact-us');
 Route::get('/about-us', [FrontendController::class, 'aboutUs'])->name('frontend.about-us');
+Route::get('/refund', [FrontendController::class, 'refund'])->name('frontend.refund');
+
+
 Route::get('/blogs', [FrontendController::class, 'blogs'])->name('frontend.blogs');
 Route::get('/blog/{slug}', [FrontendController::class, 'blogDetail'])->name('blog.detail');
 Route::get('/track-order', [FrontendController::class, 'trackOrder'])->name('frontend.track.order');

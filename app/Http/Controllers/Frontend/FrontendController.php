@@ -506,6 +506,12 @@ class FrontendController extends Controller
     {
         return view('frontend.pages.about-us');
     }
+
+    public function refund()
+    {
+        return view('frontend.pages.refund');
+    }
+
     public function blogs(Request $request)
     {
         $search = trim((string) $request->get('q', ''));
