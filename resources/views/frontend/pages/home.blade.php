@@ -60,7 +60,13 @@
                         @foreach ($sliders as $index => $slider)
                             @php
                                 $isFirst = $index === 0;
+
+                                // Desktop image + mobile image (mobile falls back to desktop if not uploaded)
                                 $sliderImage = !empty($slider['photos']) ? uploaded_asset($slider['photos']) : null;
+                                $mobileImage = !empty($slider['mobile_image'])
+                                    ? uploaded_asset($slider['mobile_image'])
+                                    : null;
+
                                 $starCount = (int) ($slider['star_count'] ?? 0);
                                 $overlayClass =
                                     $index % 2 === 0
@@ -73,10 +79,18 @@
                                 @if (!$isFirst) aria-hidden="true" @endif>
                                 <div class="relative w-full h-full">
 
-                                    @if ($sliderImage)
-                                        <img src="{{ $sliderImage }}" alt="{{ $slider['title'] ?? 'Slide' }}"
-                                            class="absolute inset-0 w-full h-full object-cover object-center"
-                                            loading="{{ $isFirst ? 'eager' : 'lazy' }}">
+                                    {{-- Background image: mobile_image on mobile/tablet, photos on desktop --}}
+                                    @if ($sliderImage || $mobileImage)
+                                        <picture>
+                                            @if ($mobileImage)
+                                                <source media="(max-width: 1023px)" srcset="{{ $mobileImage }}">
+                                            @endif
+                                            <img src="{{ $sliderImage ?? $mobileImage }}"
+                                                alt="{{ $slider['title'] ?? 'Slide' }}"
+                                                class="absolute inset-0 w-full h-full object-cover object-center"
+                                                loading="{{ $isFirst ? 'eager' : 'lazy' }}"
+                                                @if ($isFirst) fetchpriority="high" @endif>
+                                        </picture>
                                     @else
                                         <div class="absolute inset-0 bg-gradient-to-br from-brand-700 to-brand-900"></div>
                                     @endif
@@ -95,7 +109,8 @@
                                                                 @for ($i = 1; $i <= 5; $i++)
                                                                     <svg class="w-4 h-4" viewBox="0 0 24 24"
                                                                         fill="{{ $i <= $starCount ? 'currentColor' : 'none' }}"
-                                                                        stroke="currentColor" stroke-width="1.8">
+                                                                        stroke="currentColor" stroke-width="1.8"
+                                                                        aria-hidden="true">
                                                                         <polygon
                                                                             points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                                                     </svg>

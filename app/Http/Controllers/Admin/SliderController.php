@@ -25,6 +25,7 @@ class SliderController extends Controller
     {
         $request->validate([
             'photos'          => 'nullable',
+            'mobile_image'          => 'nullable',
             'title'           => 'required|string|max:255',
             'sub_title'       => 'required|string|max:255',
             'button_name'     => 'required|string|max:255',
@@ -38,6 +39,7 @@ class SliderController extends Controller
         $slider->button_name = $request->input('button_name');
         $slider->button_link = $request->input('button_link');
         $slider->photos = $request->input('photos');
+        $slider->mobile_image = $request->input('mobile_image');
 
         $slider->save();
 
@@ -57,6 +59,7 @@ class SliderController extends Controller
         // Validation
         $request->validate([
             'photos' => 'nullable',
+            'mobile_image' => 'nullable',
             'title' => 'required',
             'sub_title' => 'required',
             'button_name' => 'required',
@@ -69,6 +72,7 @@ class SliderController extends Controller
         $slider->button_name = $request->button_name;
         $slider->button_link = $request->button_link;
         $slider->photos = $request->photos;
+        $slider->mobile_image = $request->mobile_image;
 
         $slider->save();
 

@@ -55,6 +55,23 @@
                                     <small class="text-muted">{{ translate('These images are visible in slider') }}</small>
                                 </div>
                             </div>
+                            <div class="form-group row mb-3">
+                                <label class="col-md-3 col-form-label" for="signinSrEmail">{{ translate('Mobile Image') }}
+                                    <small>(300x300)</small></label>
+                                <div class="col-md-9">
+                                    <div class="input-group" data-toggle="aizuploader" data-type="image">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text bg-soft-secondary font-weight-medium">
+                                                {{ translate('Browse') }}</div>
+                                        </div>
+                                        <div class="form-control file-amount">{{ translate('Choose File') }}</div>
+                                        <input type="hidden" name="mobile_image" class="selected-files">
+                                    </div>
+                                    <div class="file-preview box sm">
+                                    </div>
+                                    <small class="text-muted">{{ translate('These images are visible in slider') }}</small>
+                                </div>
+                            </div>
 
 
                             <!-- Button Name -->

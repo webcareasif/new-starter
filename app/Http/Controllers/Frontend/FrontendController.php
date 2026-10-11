@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Admin\ProductVarient;
 use App\Models\Admin\Review;
+use App\Models\BusinessSetting;
 use App\Models\OrderDetail;
 use App\Models\ShippingCost;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,43 @@ class FrontendController extends Controller
 {
     public function home()
     {
+        $allowed = [
+            'website_name',
+            'facebook_link',
+            'twitter_link',
+            'youtube_link',
+            'instagram_link',
+            'linkedin_link',
+            'maintenance_mode',
+            'header_logo',
+            'footer_logo',
+            'site_icon',
+            'helpline_number',
+            'payment_method_images',
+            'frontend_copyright_text',
+            'contact_email',
+            'contact_phone',
+            'contact_address',
+            'base_color',
+            'base_hov_color',
+            'top_bar_offer',
+            'b_opening_hour',
+            'b_closing_hour',
+            'n_sub_title',
+            'fb_page_username',
+            'whatsapp_number',
+            'otp_for_order',
+            'forget_password_otp',
+            'phone_verification_otp',
+            'is_active_in_co_oder',
+        ];
+
+        // ─── Business settings (only allowed keys) ───
+        $settings = BusinessSetting::all()
+            ->pluck('value', 'type')
+            ->only($allowed)
+            ->toArray();
+
         $with = ['price', 'category', 'inventory', 'reviews', 'variants.attributeRel'];
 
         /* ---------------- Categories (sidebar + mobile circles + tabs) ---------------- */
@@ -46,6 +84,7 @@ class FrontendController extends Controller
                     'button_name'     => $slider->button_name,
                     'button_link'     => $slider->button_link,
                     'photos'          => $slider->photos,
+                    'mobile_image'    => $slider->mobile_image,
                     'customer_review' => $slider->customer_review,
                     'star_count'      => $slider->star_count,
                     'description'     => $slider->description,

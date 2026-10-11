@@ -42,6 +42,14 @@
         }
     </script>
     <link rel="stylesheet" href="{{ asset('frontend/assets/css/style.css') }}">
+
+    {{-- Dynamic Favicon --}}
+    @if (get_setting('site_icon'))
+        <link rel="icon" type="image/png" href="{{ uploaded_asset(get_setting('site_icon')) }}">
+
+        {{-- Optional Apple Touch Icon --}}
+        <link rel="apple-touch-icon" href="{{ uploaded_asset(get_setting('site_icon')) }}">
+    @endif
 </head>
 
 <body class="font-sans text-slate-700 bg-white">

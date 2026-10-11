@@ -13,18 +13,13 @@
         </button>
 
         {{-- Logo --}}
-        <a href="{{ route('frontend.home') }}" class="flex items-center gap-2 sm:gap-2.5 shrink-0"
-            aria-label="NexioMart home">
-            <svg class="w-8 h-8 sm:w-9 sm:h-9" viewBox="0 0 40 40" aria-hidden="true">
-                <rect width="40" height="40" rx="10" fill="#0e7d3b" />
-                <path d="M11 29c0-9 5-15 17-16-1 11-6 17-14 17-1 0-2-.3-3-1Z" fill="#fff" />
-                <path d="M12 30c4-6 8-9 13-12" stroke="#0e7d3b" stroke-width="1.6" stroke-linecap="round"
-                    fill="none" />
-            </svg>
-            <span class="leading-none">
-                <span class="block text-[1.15rem] sm:text-[1.3rem] font-bold text-brand-900">NexioMart</span>
-                <span class="hidden min-[420px]:block text-[10px] text-slate-500 mt-1">Shop Smart, Live Better</span>
-            </span>
+        <a href="{{ route('frontend.home') }}" class="flex items-center gap-3 shrink-0"
+            aria-label="{{ get_setting('website_name') ?? 'Home' }}">
+
+            <img src="{{ uploaded_asset(get_setting('header_logo')) }}"
+                alt="{{ get_setting('website_name') ?? 'Website Logo' }}"
+                class="w-auto h-12 sm:h-14 md:h-16 object-contain">
+
         </a>
 
         {{-- DESKTOP SEARCH (autocomplete) --}}
@@ -175,7 +170,7 @@
                     <path
                         d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                 </svg>
-                Need Help? <b class="text-brand-700">01316 690 209</b>
+                Need Help? <b class="text-brand-700">{{ get_setting('contact_phone') }}</b>
             </a>
         </div>
     </div>
